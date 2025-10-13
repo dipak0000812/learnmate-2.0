@@ -1,0 +1,18 @@
+{
+  "info": {"name": "LearnMate Backend", "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"},
+  "item": [
+    {"name":"Register","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"url":{"raw":"{{baseUrl}}/api/auth/register","host":["{{baseUrl}}"],"path":["api","auth","register"]},"body":{"mode":"raw","raw":"{\n  \"name\": \"Jane\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"secret123\",\n  \"college\": \"IIT\",\n  \"semester\": 3,\n  \"branch\": \"CSE\"\n}"}}},
+    {"name":"Login","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"url":{"raw":"{{baseUrl}}/api/auth/login","host":["{{baseUrl}}"],"path":["api","auth","login"]},"body":{"mode":"raw","raw":"{\n  \"email\": \"jane@example.com\",\n  \"password\": \"secret123\"\n}"}}},
+    {"name":"Me","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":{"raw":"{{baseUrl}}/api/auth/me","host":["{{baseUrl}}"],"path":["api","auth","me"]}}},
+    {"name":"Update Profile","request":{"method":"PUT","header":[{"key":"Authorization","value":"Bearer {{token}}"},{"key":"Content-Type","value":"application/json"}],"url":{"raw":"{{baseUrl}}/api/users/me","host":["{{baseUrl}}"],"path":["api","users","me"]},"body":{"mode":"raw","raw":"{\n  \"dreamCareer\": \"Data Scientist\",\n  \"skillLevel\": \"intermediate\"\n}"}}},
+    {"name":"List Questions","request":{"method":"GET","url":{"raw":"{{baseUrl}}/api/questions?career=Data%20Scientist&semester=1","host":["{{baseUrl}}"],"path":["api","questions"],"query":[{"key":"career","value":"Data Scientist"},{"key":"semester","value":"1"}]}}},
+    {"name":"Submit Assessment","request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{token}}"},{"key":"Content-Type","value":"application/json"}],"url":{"raw":"{{baseUrl}}/api/assessments/submit","host":["{{baseUrl}}"],"path":["api","assessments","submit"]},"body":{"mode":"raw","raw":"{\n  \"userId\": \"{{userId}}\",\n  \"answers\": [{\n    \"questionId\": \"{{q1}}\",\n    \"chosenOption\": \"A\"\n  }],\n  \"timeTaken\": 420\n}"}}},
+    {"name":"Generate Roadmap","request":{"method":"POST","header":[{"key":"Authorization","value":"Bearer {{token}}"},{"key":"Content-Type","value":"application/json"}],"url":{"raw":"{{baseUrl}}/api/roadmaps/generate","host":["{{baseUrl}}"],"path":["api","roadmaps","generate"]},"body":{"mode":"raw","raw":"{\n  \"userId\": \"{{userId}}\",\n  \"dreamCareer\": \"Data Scientist\",\n  \"assessmentId\": \"{{assessmentId}}\"\n}"}}},
+    {"name":"Get Roadmap","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":{"raw":"{{baseUrl}}/api/roadmaps/{{roadmapId}}","host":["{{baseUrl}}"],"path":["api","roadmaps", "{{roadmapId}}"]}}},
+    {"name":"Complete Goal","request":{"method":"PUT","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":{"raw":"{{baseUrl}}/api/roadmaps/{{roadmapId}}/goals/{{goalId}}/complete","host":["{{baseUrl}}"],"path":["api","roadmaps","{{roadmapId}}","goals","{{goalId}}","complete"]}}},
+    {"name":"Gamification","request":{"method":"GET","header":[{"key":"Authorization","value":"Bearer {{token}}"}],"url":{"raw":"{{baseUrl}}/api/gamification/{{userId}}","host":["{{baseUrl}}"],"path":["api","gamification","{{userId}}"]}}}
+  ],
+  "variable":[{"key":"baseUrl","value":"http://localhost:5000"}]
+}
+
+

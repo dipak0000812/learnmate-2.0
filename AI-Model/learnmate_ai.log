@@ -1,0 +1,42 @@
+2025-10-26 17:02:06,994 - models.quiz_evaluator - INFO - QuizEvaluator initialized
+2025-10-26 17:02:06,995 - models.roadmap_generator - INFO - RoadmapGenerator initialized
+2025-10-26 17:02:07,079 - models.career_recommender - INFO - Career model loaded from disk
+2025-10-26 17:02:07,080 - __main__ - INFO - All AI models initialized successfully
+2025-10-26 17:02:07,124 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.113.201:5000
+2025-10-26 17:02:07,124 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-26 17:06:55,224 - models.quiz_evaluator - INFO - QuizEvaluator initialized
+2025-10-26 17:06:55,225 - models.roadmap_generator - INFO - RoadmapGenerator initialized
+2025-10-26 17:06:55,280 - models.career_recommender - INFO - Career model loaded from disk
+2025-10-26 17:06:55,280 - __main__ - INFO - All AI models initialized successfully
+2025-10-26 17:06:55,305 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.113.201:5000
+2025-10-26 17:06:55,306 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-26 17:07:10,771 - werkzeug - INFO - 127.0.0.1 - - [26/Oct/2025 17:07:10] "GET /health HTTP/1.1" 200 -
+2025-10-26 17:07:12,808 - __main__ - INFO - Received quiz evaluation request
+2025-10-26 17:07:12,827 - models.quiz_evaluator - INFO - Quiz evaluation completed: 53.3%
+2025-10-26 17:07:12,828 - __main__ - INFO - Quiz evaluated successfully. Score: 1.6/3
+2025-10-26 17:07:12,828 - __main__ - ERROR - Error in quiz evaluation: Object of type bool_ is not JSON serializable
+2025-10-26 17:07:12,828 - werkzeug - INFO - 127.0.0.1 - - [26/Oct/2025 17:07:12] "[35m[1mPOST /ai/evaluate-quiz HTTP/1.1[0m" 500 -
+2025-10-26 17:08:58,560 - werkzeug - INFO - 127.0.0.1 - - [26/Oct/2025 17:08:58] "GET /health HTTP/1.1" 200 -
+2025-10-26 17:09:00,607 - __main__ - INFO - Received quiz evaluation request
+2025-10-26 17:09:00,614 - models.quiz_evaluator - INFO - Quiz evaluation completed: 53.3%
+2025-10-26 17:09:00,614 - __main__ - INFO - Quiz evaluated successfully. Score: 1.6/3
+2025-10-26 17:09:00,616 - __main__ - ERROR - Error in quiz evaluation: Object of type bool_ is not JSON serializable
+2025-10-26 17:09:00,617 - werkzeug - INFO - 127.0.0.1 - - [26/Oct/2025 17:09:00] "[35m[1mPOST /ai/evaluate-quiz HTTP/1.1[0m" 500 -
+2025-10-26 17:10:17,198 - werkzeug - INFO - 127.0.0.1 - - [26/Oct/2025 17:10:17] "GET /health HTTP/1.1" 200 -
+2025-10-26 17:10:19,252 - __main__ - INFO - Received quiz evaluation request
+2025-10-26 17:10:19,256 - models.quiz_evaluator - INFO - Quiz evaluation completed: 53.3%
+2025-10-26 17:10:19,257 - __main__ - INFO - Quiz evaluated successfully. Score: 1.6/3
+2025-10-26 17:10:19,257 - __main__ - ERROR - Error in quiz evaluation: Object of type bool_ is not JSON serializable
+2025-10-26 17:10:19,260 - werkzeug - INFO - 127.0.0.1 - - [26/Oct/2025 17:10:19] "[35m[1mPOST /ai/evaluate-quiz HTTP/1.1[0m" 500 -
+2025-10-26 17:12:37,299 - werkzeug - INFO - 127.0.0.1 - - [26/Oct/2025 17:12:37] "GET /health HTTP/1.1" 200 -
+2025-10-26 17:12:39,324 - __main__ - INFO - Received quiz evaluation request
+2025-10-26 17:12:39,332 - models.quiz_evaluator - INFO - Quiz evaluation completed: 53.3%
+2025-10-26 17:12:39,336 - __main__ - INFO - Quiz evaluated successfully. Score: 1.6/3
+2025-10-26 17:12:39,337 - __main__ - ERROR - Error in quiz evaluation: Object of type bool_ is not JSON serializable
+2025-10-26 17:12:39,338 - werkzeug - INFO - 127.0.0.1 - - [26/Oct/2025 17:12:39] "[35m[1mPOST /ai/evaluate-quiz HTTP/1.1[0m" 500 -

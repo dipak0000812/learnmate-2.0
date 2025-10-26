@@ -3,13 +3,32 @@ from flask_cors import CORS
 import logging
 from datetime import datetime
 import os
+import json
+import numpy as np
 
 from models.quiz_evaluator import QuizEvaluator
 from models.roadmap_generator import RoadmapGenerator
 from models.career_recommender import CareerRecommender
 
+
+# Custom JSON encoder for NumPy types
+class NumpyEncoder(json.JSONEncoder):
+    """Custom JSON encoder for NumPy types"""
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        return super(NumpyEncoder, self).default(obj)
+
+
 # Initialize Flask app
 app = Flask(__name__)
+app.json_encoder = NumpyEncoder
 CORS(app)
 
 # Configure logging
@@ -22,6 +41,8 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# ... rest of your app.py code continues here
 
 # Initialize AI models
 try:

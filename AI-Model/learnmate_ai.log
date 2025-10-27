@@ -68,3 +68,30 @@
 2025-10-26 17:16:13,338 - werkzeug - INFO - 127.0.0.1 - - [26/Oct/2025 17:16:13] "[31m[1mPOST /ai/evaluate-quiz HTTP/1.1[0m" 400 -
 2025-10-26 17:16:15,369 - werkzeug - INFO - 127.0.0.1 - - [26/Oct/2025 17:16:15] "[33mGET /invalid-endpoint HTTP/1.1[0m" 404 -
 2025-10-26 17:17:39,644 - werkzeug - INFO - 127.0.0.1 - - [26/Oct/2025 17:17:39] "GET /health HTTP/1.1" 200 -
+2025-10-27 10:46:12,511 - models.quiz_evaluator - INFO - QuizEvaluator initialized
+2025-10-27 10:46:12,512 - models.roadmap_generator - INFO - RoadmapGenerator initialized
+2025-10-27 10:46:12,668 - models.career_recommender - INFO - Career model loaded from disk
+2025-10-27 10:46:12,668 - __main__ - INFO - All AI models initialized successfully
+2025-10-27 10:46:12,728 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.113.201:5000
+2025-10-27 10:46:12,729 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-27 10:46:41,143 - werkzeug - INFO - 127.0.0.1 - - [27/Oct/2025 10:46:41] "GET /health HTTP/1.1" 200 -
+2025-10-27 10:46:43,181 - __main__ - INFO - Received quiz evaluation request
+2025-10-27 10:46:43,190 - models.quiz_evaluator - INFO - Quiz evaluation completed: 53.3%
+2025-10-27 10:46:43,190 - __main__ - INFO - Quiz evaluated successfully. Score: 1.6/3
+2025-10-27 10:46:43,192 - werkzeug - INFO - 127.0.0.1 - - [27/Oct/2025 10:46:43] "POST /ai/evaluate-quiz HTTP/1.1" 200 -
+2025-10-27 10:46:45,245 - __main__ - INFO - Received roadmap generation request
+2025-10-27 10:46:45,246 - models.roadmap_generator - INFO - Generating roadmap for user test_user_123
+2025-10-27 10:46:45,247 - models.roadmap_generator - INFO - Roadmap generated: 9 milestones
+2025-10-27 10:46:45,248 - __main__ - INFO - Roadmap generated for user test_user_123
+2025-10-27 10:46:45,249 - werkzeug - INFO - 127.0.0.1 - - [27/Oct/2025 10:46:45] "POST /ai/generate-roadmap HTTP/1.1" 200 -
+2025-10-27 10:46:47,300 - __main__ - INFO - Received career recommendation request
+2025-10-27 10:46:47,302 - models.career_recommender - INFO - Generating career recommendations
+2025-10-27 10:46:47,303 - models.career_recommender - INFO - Generated 6 career recommendations
+2025-10-27 10:46:47,304 - __main__ - INFO - Career recommendations generated: 6 careers
+2025-10-27 10:46:47,305 - werkzeug - INFO - 127.0.0.1 - - [27/Oct/2025 10:46:47] "POST /ai/recommend-career HTTP/1.1" 200 -
+2025-10-27 10:46:49,348 - __main__ - INFO - Received quiz evaluation request
+2025-10-27 10:46:49,350 - werkzeug - INFO - 127.0.0.1 - - [27/Oct/2025 10:46:49] "[31m[1mPOST /ai/evaluate-quiz HTTP/1.1[0m" 400 -
+2025-10-27 10:46:51,393 - werkzeug - INFO - 127.0.0.1 - - [27/Oct/2025 10:46:51] "[33mGET /invalid-endpoint HTTP/1.1[0m" 404 -

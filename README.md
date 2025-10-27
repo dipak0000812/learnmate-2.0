@@ -183,10 +183,10 @@ Notes:
 
 👨‍💻 Developers
 Name	Role
-[Your Name]	Backend Developer
-[Teammate Name]	Frontend Developer
-[Teammate Name]	ML Engineer
-[Teammate Name]	Project Manager
+Dipak Dhangar-Backend & AI Developer
+Bhushan Patil-Frontend Developer
+Aakanksha Borse-Documentation
+Prachi Pingale-Project Manager
 📚 License
 
 This project is licensed under the MIT License — feel free to use and modify it.

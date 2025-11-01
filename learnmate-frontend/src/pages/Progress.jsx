@@ -12,20 +12,7 @@ import {
   Activity
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const Progress = () => {
   const [timeRange, setTimeRange] = useState('week');
@@ -85,7 +72,7 @@ const Progress = () => {
   ];
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto p-4">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -98,23 +85,36 @@ const Progress = () => {
 
       {/* Time Range Selector */}
       <div className="flex gap-2">
-        {['week', 'month', 'year'].map((range) => (
-          <button
-            key={range}
-            onClick={() => setTimeRange(range)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              timeRange === range
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-            }`}
-          >
-            {range === 'week'
-              ? 'This Week'
-              : range === 'month'
-              ? 'This Month'
-              : 'This Year'}
-          </button>
-        ))}
+        <button
+          onClick={() => setTimeRange('week')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            timeRange === 'week'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+          }`}
+        >
+          This Week
+        </button>
+        <button
+          onClick={() => setTimeRange('month')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            timeRange === 'month'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+          }`}
+        >
+          This Month
+        </button>
+        <button
+          onClick={() => setTimeRange('year')}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            timeRange === 'year'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+          }`}
+        >
+          This Year
+        </button>
       </div>
 
       {/* Stats Grid */}
@@ -126,12 +126,8 @@ const Progress = () => {
                 <Clock className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Total Hours
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.totalHours}
-                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Total Hours</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalHours}</p>
               </div>
             </div>
           </CardContent>
@@ -144,12 +140,8 @@ const Progress = () => {
                 <BookOpen className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Quizzes
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.quizzesCompleted}
-                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Quizzes</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.quizzesCompleted}</p>
               </div>
             </div>
           </CardContent>
@@ -162,12 +154,8 @@ const Progress = () => {
                 <Target className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Avg Score
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.averageScore}%
-                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Avg Score</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.averageScore}%</p>
               </div>
             </div>
           </CardContent>
@@ -180,12 +168,8 @@ const Progress = () => {
                 <Zap className="w-6 h-6 text-orange-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Streak
-                </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.currentStreak} days
-                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Streak</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.currentStreak} days</p>
               </div>
             </div>
           </CardContent>
@@ -267,25 +251,39 @@ const Progress = () => {
             {subjectProgress.map((subject) => (
               <div key={subject.subject}>
                 <div className="flex justify-between mb-2">
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {subject.subject}
-                  </span>
-                  <span
-                    className="font-semibold"
-                    style={{ color: subject.color }}
-                  >
-                    {subject.progress}%
-                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">{subject.subject}</span>
+                  <span className="font-semibold" style={{ color: subject.color }}>{subject.progress}%</span>
                 </div>
                 <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div
                     className="h-full transition-all duration-500 rounded-full"
-                    style={{
-                      width: `${subject.progress}%`,
-                      backgroundColor: subject.color
-                    }}
+                    style={{ width: `${subject.progress}%`, backgroundColor: subject.color }}
                   />
                 </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Milestones */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-yellow-600" />
+            Recent Milestones
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {milestones.map((milestone) => (
+              <div key={milestone.id} className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-3xl">{milestone.icon}</span>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900 dark:text-white">{milestone.title}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{milestone.date}</p>
+                </div>
+                <Award className="w-5 h-5 text-yellow-500" />
               </div>
             ))}
           </div>

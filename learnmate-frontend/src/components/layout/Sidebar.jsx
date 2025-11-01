@@ -8,7 +8,8 @@ import {
   User, 
   Award,
   BarChart3,
-  Settings
+  Settings,
+  Trophy // ✅ Added this import
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -24,6 +25,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
     { name: 'Achievements', path: '/achievements', icon: Award },
     { name: 'Profile', path: '/profile', icon: User },
     { name: 'Settings', path: '/settings', icon: Settings },
+    { name: 'Leaderboard', path: '/leaderboard', icon: Trophy }, // ✅ Works now
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -83,7 +85,10 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
                   <span className="font-semibold text-blue-600 dark:text-blue-400">5</span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full" style={{ width: '65%' }}></div>
+                  <div
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full"
+                    style={{ width: '65%' }}
+                  ></div>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">350 / 500 XP</p>
               </div>

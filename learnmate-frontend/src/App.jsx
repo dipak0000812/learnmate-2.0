@@ -6,6 +6,7 @@ import useAuthStore from './store/authStore';
 // Auth Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword'; // ✅ Added
 
 // Main Pages
 import Dashboard from './pages/Dashboard';
@@ -15,6 +16,10 @@ import QuizResults from './pages/QuizResults';
 import Roadmap from './pages/Roadmap';
 import Careers from './pages/Careers';
 import Profile from './pages/Profile';
+import Progress from './pages/Progress';
+import Achievements from './pages/Achievements';
+import Settings from './pages/Settings';
+import Leaderboard from './pages/Leaderboard'; // ✅ Added
 
 // Layout
 import MainLayout from './components/layout/MainLayout';
@@ -51,6 +56,15 @@ function App() {
           element={
             <PublicRoute>
               <Register />
+            </PublicRoute>
+          }
+        />
+        {/* ✅ Forgot Password Route */}
+        <Route
+          path="/forgot-password"
+          element={
+            <PublicRoute>
+              <ForgotPassword />
             </PublicRoute>
           }
         />
@@ -116,21 +130,57 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route 
-          path="/profile" 
+        <Route
+          path="/profile"
           element={
             <ProtectedRoute>
               <MainLayout>
                 <Profile />
               </MainLayout>
             </ProtectedRoute>
-          } 
+          }
         />
-
-        {/* Placeholder routes */}
-        <Route path="/progress" element={<ProtectedRoute><MainLayout><div className="text-center p-8">Progress Page Coming Soon...</div></MainLayout></ProtectedRoute>} />
-        <Route path="/achievements" element={<ProtectedRoute><MainLayout><div className="text-center p-8">Achievements Page Coming Soon...</div></MainLayout></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><MainLayout><div className="text-center p-8">Settings Page Coming Soon...</div></MainLayout></ProtectedRoute>} />
+        <Route
+          path="/progress"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Progress />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/achievements"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Achievements />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Settings />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        {/* ✅ Leaderboard Route */}
+        <Route
+          path="/leaderboard"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Leaderboard />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );

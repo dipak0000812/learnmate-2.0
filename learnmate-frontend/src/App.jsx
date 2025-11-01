@@ -116,22 +116,20 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route 
-           path="/profile" 
-           element={
-              <ProtectedRoute>
-            <MainLayout>
-                         <Profile />
-                        </MainLayout>
-                         </ProtectedRoute>
-                       } 
-                   />
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Profile />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
+        />
 
         {/* Placeholder routes */}
         <Route path="/progress" element={<ProtectedRoute><MainLayout><div className="text-center p-8">Progress Page Coming Soon...</div></MainLayout></ProtectedRoute>} />
         <Route path="/achievements" element={<ProtectedRoute><MainLayout><div className="text-center p-8">Achievements Page Coming Soon...</div></MainLayout></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><MainLayout><div className="text-center p-8">Profile Page Coming Soon...</div></MainLayout></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><MainLayout><div className="text-center p-8">Settings Page Coming Soon...</div></MainLayout></ProtectedRoute>} />
       </Routes>
     </Router>

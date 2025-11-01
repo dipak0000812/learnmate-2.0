@@ -7,6 +7,21 @@ import useAuthStore from './store/authStore';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 
+// Main Pages
+import Dashboard from './pages/Dashboard';
+import Quizzes from './pages/Quizzes';
+import QuizTake from './pages/QuizTake';
+import QuizResults from './pages/QuizResults';
+import Roadmap from './pages/Roadmap';
+import Careers from './pages/Careers';
+import Profile from './pages/Profile';
+import Progress from './pages/Progress';
+import Achievements from './pages/Achievements';
+import Settings from './pages/Settings';
+
+// Layout
+import MainLayout from './components/layout/MainLayout';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
@@ -43,8 +58,109 @@ function App() {
           }
         />
 
-        {/* Placeholder for protected routes - we'll add these next */}
-        <Route path="/dashboard" element={<div>Dashboard Coming Soon...</div>} />
+        {/* Protected Routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Dashboard />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quizzes"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Quizzes />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quiz/:id"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <QuizTake />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quiz/results/:id"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <QuizResults />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/roadmap"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Roadmap />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/careers"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Careers />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Profile />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Newly Added Pages */}
+        <Route 
+          path="/progress" 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Progress />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/achievements" 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Achievements />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/settings" 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Settings />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
     </Router>
   );

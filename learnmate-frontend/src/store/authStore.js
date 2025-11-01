@@ -2,9 +2,9 @@ import { create } from 'zustand';
 import api from '../services/api';
 
 const useAuthStore = create((set) => ({
-  user: JSON.parse(localStorage.getItem('user')) || null,
-  token: localStorage.getItem('token') || null,
-  isAuthenticated: !!localStorage.getItem('token'),
+  user: { name: 'Test User', email: 'test@example.com' }, // ← Temporary mock user
+  token: 'test-token', // ← Temporary mock token
+  isAuthenticated: true, // ← Change to true for testing
   loading: false,
   error: null,
 

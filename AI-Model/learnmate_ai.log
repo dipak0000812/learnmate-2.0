@@ -153,3 +153,13 @@
 2025-10-29 20:10:55,238 - __main__ - INFO - Received quiz evaluation request
 2025-10-29 20:10:55,239 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 20:10:55] "[31m[1mPOST /ai/evaluate-quiz HTTP/1.1[0m" 400 -
 2025-10-29 20:10:57,266 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 20:10:57] "[33mGET /invalid-endpoint HTTP/1.1[0m" 404 -
+2025-10-31 18:46:14,205 - models.quiz_evaluator - INFO - QuizEvaluator initialized
+2025-10-31 18:46:14,206 - models.roadmap_generator - INFO - RoadmapGenerator initialized
+2025-10-31 18:46:14,396 - models.career_recommender - ERROR - Error loading model: No module named 'sklearn.ensemble._gb_losses'
+2025-10-31 18:46:14,425 - models.career_recommender - INFO - Career model loaded from disk
+2025-10-31 18:46:14,425 - __main__ - INFO - All AI models initialized successfully
+2025-10-31 18:46:14,476 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.113.201:5000
+2025-10-31 18:46:14,477 - werkzeug - INFO - [33mPress CTRL+C to quit[0m

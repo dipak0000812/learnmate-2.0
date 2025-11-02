@@ -6,7 +6,7 @@ import useAuthStore from './store/authStore';
 // Auth Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
-import ForgotPassword from './pages/auth/ForgotPassword'; // ✅ Added
+import ForgotPassword from './pages/auth/ForgotPassword';
 
 // Main Pages
 import Dashboard from './pages/Dashboard';
@@ -19,7 +19,8 @@ import Profile from './pages/Profile';
 import Progress from './pages/Progress';
 import Achievements from './pages/Achievements';
 import Settings from './pages/Settings';
-import Leaderboard from './pages/Leaderboard'; // ✅ Added
+import Gamification from './pages/Gamification';
+import Leaderboard from './pages/Leaderboard';
 
 // Layout
 import MainLayout from './components/layout/MainLayout';
@@ -59,15 +60,7 @@ function App() {
             </PublicRoute>
           }
         />
-        {/* ✅ Forgot Password Route */}
-        <Route
-          path="/forgot-password"
-          element={
-            <PublicRoute>
-              <ForgotPassword />
-            </PublicRoute>
-          }
-        />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Protected Routes */}
         <Route
@@ -130,56 +123,65 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/profile"
+        <Route 
+          path="/profile" 
           element={
             <ProtectedRoute>
               <MainLayout>
                 <Profile />
               </MainLayout>
             </ProtectedRoute>
-          }
+          } 
         />
-        <Route
-          path="/progress"
+        <Route 
+          path="/progress" 
           element={
             <ProtectedRoute>
               <MainLayout>
                 <Progress />
               </MainLayout>
             </ProtectedRoute>
-          }
+          } 
         />
-        <Route
-          path="/achievements"
+        <Route 
+          path="/achievements" 
           element={
             <ProtectedRoute>
               <MainLayout>
                 <Achievements />
               </MainLayout>
             </ProtectedRoute>
-          }
+          } 
         />
-        <Route
-          path="/settings"
+        <Route 
+          path="/settings" 
           element={
             <ProtectedRoute>
               <MainLayout>
                 <Settings />
               </MainLayout>
             </ProtectedRoute>
-          }
+          } 
         />
-        {/* ✅ Leaderboard Route */}
-        <Route
-          path="/leaderboard"
+        <Route 
+          path="/gamification" 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Gamification />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/leaderboard" 
           element={
             <ProtectedRoute>
               <MainLayout>
                 <Leaderboard />
               </MainLayout>
             </ProtectedRoute>
-          }
+          } 
         />
       </Routes>
     </Router>

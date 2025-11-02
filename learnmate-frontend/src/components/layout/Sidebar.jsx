@@ -9,7 +9,9 @@ import {
   Award,
   BarChart3,
   Settings,
-  Trophy // ✅ Added this import
+  Trophy,
+  Zap,
+  Target
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -17,15 +19,16 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
   const location = useLocation();
 
   const menuItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Quizzes', path: '/quizzes', icon: BookOpen },
-    { name: 'Roadmap', path: '/roadmap', icon: Map },
-    { name: 'Careers', path: '/careers', icon: Briefcase },
-    { name: 'Progress', path: '/progress', icon: BarChart3 },
-    { name: 'Achievements', path: '/achievements', icon: Award },
-    { name: 'Profile', path: '/profile', icon: User },
-    { name: 'Settings', path: '/settings', icon: Settings },
-    { name: 'Leaderboard', path: '/leaderboard', icon: Trophy }, // ✅ Works now
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, color: 'text-blue-600' },
+    { name: 'Quizzes', path: '/quizzes', icon: BookOpen, color: 'text-teal-600' },
+    { name: 'Roadmap', path: '/roadmap', icon: Map, color: 'text-emerald-600' },
+    { name: 'Careers', path: '/careers', icon: Briefcase, color: 'text-blue-500' },
+    { name: 'Progress', path: '/progress', icon: BarChart3, color: 'text-teal-500' },
+    { name: 'Gamification', path: '/gamification', icon: Zap, color: 'text-yellow-500' },
+    { name: 'Achievements', path: '/achievements', icon: Award, color: 'text-orange-500' },
+    { name: 'Leaderboard', path: '/leaderboard', icon: Trophy, color: 'text-yellow-600' },
+    { name: 'Profile', path: '/profile', icon: User, color: 'text-indigo-600' },
+    { name: 'Settings', path: '/settings', icon: Settings, color: 'text-gray-600' },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -35,7 +38,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden backdrop-blur-sm"
           onClick={closeSidebar}
         />
       )}
@@ -43,11 +46,11 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-transform duration-300 z-40',
+          'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-r border-gray-200 dark:border-gray-700 transition-transform duration-300 z-40',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-        <div className="flex flex-col h-full p-4 overflow-y-auto">
+        <div className="flex flex-col h-full p-4 overflow-y-auto custom-scrollbar">
           {/* Navigation Menu */}
           <nav className="flex-1 space-y-1">
             {menuItems.map((item) => {
@@ -60,14 +63,20 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
                   to={item.path}
                   onClick={closeSidebar}
                   className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-lg transition-all',
+                    'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden',
                     active
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? 'bg-gradient-to-r from-blue-600 to-teal-600 text-white shadow-lg shadow-teal-500/50 scale-105'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-teal-50 dark:hover:from-gray-700 dark:hover:to-gray-600 hover:scale-105'
                   )}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.name}</span>
+                  {active && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-teal-400/20 animate-pulse" />
+                  )}
+                  <Icon className={cn('w-5 h-5 relative z-10', active ? 'text-white' : item.color)} />
+                  <span className="font-medium relative z-10">{item.name}</span>
+                  {active && (
+                    <div className="absolute right-2 w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+                  )}
                 </Link>
               );
             })}
@@ -75,27 +84,43 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
 
           {/* Bottom Section - Quick Stats */}
           <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                Your Progress
-              </h4>
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-600 dark:text-gray-400">Level</span>
-                  <span className="font-semibold text-blue-600 dark:text-blue-400">5</span>
+            <div className="bg-gradient-to-br from-blue-50 to-teal-50 dark:from-blue-900/20 dark:to-teal-900/20 rounded-xl p-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-teal-400/10 rounded-full blur-2xl" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-5 h-5 text-yellow-500 animate-pulse" />
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                    Your Progress
+                  </h4>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full"
-                    style={{ width: '65%' }}
-                  ></div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-600 dark:text-gray-400">Level</span>
+                    <span className="font-semibold text-teal-600 dark:text-teal-400">7</span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-600 to-teal-600 h-2 rounded-full animate-pulse" style={{ width: '65%' }}></div>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">3450 / 5000 XP</p>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">350 / 500 XP</p>
               </div>
             </div>
           </div>
         </div>
       </aside>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(to bottom, #0ea5e9, #14b8a6);
+          border-radius: 3px;
+        }
+      `}</style>
     </>
   );
 };

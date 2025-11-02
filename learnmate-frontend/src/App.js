@@ -6,6 +6,7 @@ import useAuthStore from './store/authStore';
 // Auth Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
 
 // Main Pages
 import Dashboard from './pages/Dashboard';
@@ -18,6 +19,8 @@ import Profile from './pages/Profile';
 import Progress from './pages/Progress';
 import Achievements from './pages/Achievements';
 import Settings from './pages/Settings';
+import Gamification from './pages/Gamification';
+import Leaderboard from './pages/Leaderboard';
 
 // Layout
 import MainLayout from './components/layout/MainLayout';
@@ -57,6 +60,7 @@ function App() {
             </PublicRoute>
           }
         />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Protected Routes */}
         <Route
@@ -129,8 +133,6 @@ function App() {
             </ProtectedRoute>
           } 
         />
-
-        {/* Newly Added Pages */}
         <Route 
           path="/progress" 
           element={
@@ -157,6 +159,26 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <Settings />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/gamification" 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Gamification />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/leaderboard" 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Leaderboard />
               </MainLayout>
             </ProtectedRoute>
           } 

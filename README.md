@@ -287,15 +287,6 @@ cd learnmate-backend
 npm install
 
 # Create .env file
-cat > .env << EOF
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/learnmate
-JWT_SECRET=your_super_secret_jwt_key_change_this
-CORS_ORIGINS=http://localhost:3000
-RATE_WINDOW_MS=900000
-RATE_MAX=100
-AI_API_URL=http://localhost:5001
-EOF
 
 # Start MongoDB (if running locally)
 mongod

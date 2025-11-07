@@ -163,3 +163,13 @@
  * Running on http://127.0.0.1:5000
  * Running on http://192.168.113.201:5000
 2025-10-31 18:46:14,477 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-04 10:59:21,543 - models.quiz_evaluator - INFO - QuizEvaluator initialized
+2025-11-04 10:59:21,544 - models.roadmap_generator - INFO - RoadmapGenerator initialized
+2025-11-04 10:59:22,021 - models.career_recommender - ERROR - Error loading model: 'model'
+2025-11-04 10:59:22,051 - models.career_recommender - INFO - Career model loaded from disk
+2025-11-04 10:59:22,052 - __main__ - INFO - All AI models initialized successfully
+2025-11-04 10:59:22,124 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.115.75.201:5000
+2025-11-04 10:59:22,124 - werkzeug - INFO - [33mPress CTRL+C to quit[0m

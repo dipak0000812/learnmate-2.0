@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { UserPlus, Mail, Lock, User, Eye, EyeOff, GraduationCap, Briefcase, Sparkles } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/input';
+import Input from '../../components/ui/input/input';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -40,7 +40,7 @@ const Register = () => {
     
     if (result.success) {
       toast.success('Account created successfully! 🎉');
-      navigate('/dashboard');
+      navigate('/onboarding');
     } else {
       toast.error(result.error || 'Registration failed');
     }

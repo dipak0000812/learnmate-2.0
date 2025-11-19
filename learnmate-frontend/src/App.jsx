@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import useAuthStore from './store/authStore';
+import tokenService from './services/tokenService';
 
 // Auth Pages
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
+import OAuthCallback from './pages/auth/OAuthCallback';
+import VerifyEmail from './pages/auth/VerifyEmail';
+import VerifyEmailNotice from './pages/auth/VerifyEmailNotice';
 
 // Main Pages
 import Dashboard from './pages/Dashboard';
@@ -22,167 +27,208 @@ import Settings from './pages/Settings';
 import Gamification from './pages/Gamification';
 import Leaderboard from './pages/Leaderboard';
 
+// Onboarding & Assessment
+import Onboarding from './pages/Onboarding';
+import InitialAssessment from './pages/assessment/InitialAssessment';
+import AssessmentResults from './pages/assessment/AssessmentResults';
+
 // Layout
 import MainLayout from './components/layout/MainLayout';
 
-// Protected Route Component
+// Protected Route
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
-// Public Route (redirect if authenticated)
+// Public Route
 const PublicRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
   return !isAuthenticated ? children : <Navigate to="/dashboard" />;
 };
 
 function App() {
+  // 🔐 Auto Token Refresh
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+
+    if (token) {
+      tokenService.initTokenRefresh();
+    }
+
+    return () => {
+      tokenService.stopTokenRefresh();
+    };
+  }, []);
+
   return (
     <Router>
       <Toaster position="top-right" richColors />
       <Routes>
+
         {/* Public Routes */}
         <Route path="/" element={<Navigate to="/login" />} />
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <PublicRoute>
-              <Register />
-            </PublicRoute>
-          }
-        />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Protected Routes */}
+        <Route 
+          path="/login" 
+          element={
+            <PublicRoute><Login /></PublicRoute>
+          } 
+        />
+
+        <Route 
+          path="/register" 
+          element={
+            <PublicRoute><Register /></PublicRoute>
+          } 
+        />
+
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
+
+        {/* 📩 Newly Added Email Verification Routes */}
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/verify-email-notice" element={<VerifyEmailNotice />} />
+
+        {/* Onboarding */}
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <Onboarding />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Assessment */}
+        <Route
+          path="/assessment/initial"
+          element={
+            <ProtectedRoute>
+              <InitialAssessment />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/assessment/results"
+          element={
+            <ProtectedRoute>
+              <AssessmentResults />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Main Routes */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <Dashboard />
-              </MainLayout>
+              <MainLayout><Dashboard /></MainLayout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/quizzes"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <Quizzes />
-              </MainLayout>
+              <MainLayout><Quizzes /></MainLayout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/quiz/:id"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <QuizTake />
-              </MainLayout>
+              <MainLayout><QuizTake /></MainLayout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/quiz/results/:id"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <QuizResults />
-              </MainLayout>
+              <MainLayout><QuizResults /></MainLayout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/roadmap"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <Roadmap />
-              </MainLayout>
+              <MainLayout><Roadmap /></MainLayout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/careers"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <Careers />
-              </MainLayout>
+              <MainLayout><Careers /></MainLayout>
             </ProtectedRoute>
           }
         />
-        <Route 
-          path="/profile" 
+
+        <Route
+          path="/profile"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <Profile />
-              </MainLayout>
+              <MainLayout><Profile /></MainLayout>
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/progress" 
+
+        <Route
+          path="/progress"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <Progress />
-              </MainLayout>
+              <MainLayout><Progress /></MainLayout>
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/achievements" 
+
+        <Route
+          path="/achievements"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <Achievements />
-              </MainLayout>
+              <MainLayout><Achievements /></MainLayout>
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/settings" 
+
+        <Route
+          path="/settings"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <Settings />
-              </MainLayout>
+              <MainLayout><Settings /></MainLayout>
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/gamification" 
+
+        <Route
+          path="/gamification"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <Gamification />
-              </MainLayout>
+              <MainLayout><Gamification /></MainLayout>
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/leaderboard" 
+
+        <Route
+          path="/leaderboard"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                <Leaderboard />
-              </MainLayout>
+              <MainLayout><Leaderboard /></MainLayout>
             </ProtectedRoute>
-          } 
+          }
         />
+
       </Routes>
     </Router>
   );

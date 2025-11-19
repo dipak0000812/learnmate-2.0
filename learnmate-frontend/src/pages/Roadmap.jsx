@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Target, 
   CheckCircle, 
@@ -9,15 +9,39 @@ import {
   Calendar,
   Award,
   Zap,
-  Book
+  Book,
+  Loader
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { toast } from 'sonner';
+import roadmapService from '../services/roadmapService';
+import useAuthStore from '../store/authStore';
 
 const Roadmap = () => {
-  // Mock roadmap data
-  const roadmap = {
+  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [generatedRoadmap, setGeneratedRoadmap] = useState(null);
+  const [selectedCareerForRoadmap, setSelectedCareerForRoadmap] = useState('');
+  const [loadingRoadmap, setLoadingRoadmap] = useState(true);
+
+  // Career options for the modal
+  const careerOptions = [
+    'Full Stack Developer',
+    'Data Scientist',
+    'UI/UX Designer',
+    'DevOps Engineer',
+    'Mobile App Developer',
+    'AI/ML Engineer',
+    'Product Manager',
+    'Cybersecurity Specialist',
+    'Cloud Architect',
+    'Blockchain Developer'
+  ];
+
+  // Mock roadmap data (will be replaced with API data)
+  const [roadmap, setRoadmap] = useState({
     id: 1,
     career: 'Full Stack Developer',
     progress: 45,
@@ -96,6 +120,113 @@ const Roadmap = () => {
         ]
       }
     ]
+  });
+
+  // Load user's roadmap on component mount
+  useEffect(() => {
+    loadUserRoadmap();
+  }, [user]);
+
+  // Check if user came from career selection
+  useEffect(() => {
+    const selectedCareer = localStorage.getItem('selectedCareer');
+    if (selectedCareer && !generatedRoadmap) {
+      const career = JSON.parse(selectedCareer);
+      setSelectedCareerForRoadmap(career.title);
+      setShowCreateModal(true);
+      // Clear it so modal doesn't show again
+      localStorage.removeItem('selectedCareer');
+    }
+  }, []);
+
+  const loadUserRoadmap = async () => {
+    if (!user?._id) {
+      setLoadingRoadmap(false);
+      return;
+    }
+
+    try {
+      const response = await roadmapService.getUserRoadmaps(user._id);
+      if (response.status === 'success' && response.data && response.data.length > 0) {
+        const userRoadmap = response.data[0];
+        setGeneratedRoadmap(userRoadmap);
+        
+        // Update roadmap state with API data
+        setRoadmap({
+          ...roadmap,
+          career: userRoadmap.career || roadmap.career,
+          startDate: userRoadmap.startDate || roadmap.startDate,
+          targetDate: userRoadmap.targetDate || roadmap.targetDate
+        });
+        
+        console.log('Loaded roadmap:', userRoadmap);
+      }
+    } catch (error) {
+      console.error('Error loading roadmap:', error);
+    } finally {
+      setLoadingRoadmap(false);
+    }
+  };
+
+  const handleGenerateRoadmap = async () => {
+    if (!selectedCareerForRoadmap) {
+      toast.error('Please select a career first');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Get assessment results if available
+      const assessmentResults = JSON.parse(localStorage.getItem('assessmentResults'));
+      const assessmentId = assessmentResults?.assessmentId || null;
+
+      console.log('Generating roadmap for:', selectedCareerForRoadmap);
+      
+      const response = await roadmapService.generateRoadmap(
+        selectedCareerForRoadmap,
+        assessmentId
+      );
+
+      if (response.status === 'success') {
+        setGeneratedRoadmap(response.data);
+        toast.success('Roadmap generated successfully! 🎉');
+        setShowCreateModal(false);
+        
+        // Update roadmap state
+        setRoadmap({
+          ...roadmap,
+          career: selectedCareerForRoadmap,
+          startDate: new Date().toISOString().split('T')[0]
+        });
+        
+        console.log('Generated roadmap:', response.data);
+        
+        // Reload user roadmaps
+        await loadUserRoadmap();
+      }
+    } catch (error) {
+      console.error('Roadmap Generation Error:', error);
+      toast.error('Failed to generate roadmap. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompleteGoal = async (milestoneId, goalId) => {
+    try {
+      if (generatedRoadmap?._id) {
+        const response = await roadmapService.completeGoal(generatedRoadmap._id, goalId);
+        if (response.status === 'success') {
+          toast.success('Goal marked as complete! 🎉');
+          await loadUserRoadmap();
+        }
+      } else {
+        toast.success('Goal marked as complete! 🎉');
+      }
+    } catch (error) {
+      console.error('Error completing goal:', error);
+      toast.error('Failed to update goal');
+    }
   };
 
   const getStatusColor = (status) => {
@@ -116,9 +247,16 @@ const Roadmap = () => {
     }
   };
 
-  const handleCompleteGoal = (milestoneId, goalId) => {
-    toast.success('Goal marked as complete! 🎉');
-  };
+  if (loadingRoadmap) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Loading your roadmap...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -132,7 +270,7 @@ const Roadmap = () => {
             Your personalized path to becoming a {roadmap.career}
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreateModal(true)}>
           <Plus className="w-5 h-5 mr-2" />
           Create New Roadmap
         </Button>
@@ -296,6 +434,70 @@ const Roadmap = () => {
           <Button>Continue Learning</Button>
         </CardContent>
       </Card>
+
+      {/* Create Roadmap Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="max-w-md w-full">
+            <CardHeader>
+              <CardTitle>Create New Roadmap</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Select Your Dream Career
+                </label>
+                <select
+                  value={selectedCareerForRoadmap}
+                  onChange={(e) => setSelectedCareerForRoadmap(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Choose a career...</option>
+                  {careerOptions.map((career) => (
+                    <option key={career} value={career}>
+                      {career}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                <p className="text-sm text-blue-800 dark:text-blue-300">
+                  💡 <strong>Tip:</strong> We'll use your assessment results and profile to create a personalized learning path!
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1"
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleGenerateRoadmap}
+                  disabled={loading || !selectedCareerForRoadmap}
+                  className="flex-1"
+                >
+                  {loading ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin mr-2" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Target className="w-4 h-4 mr-2" />
+                      Generate Roadmap
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

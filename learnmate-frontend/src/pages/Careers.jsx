@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Briefcase, 
   TrendingUp, 
@@ -19,11 +20,15 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/input';
+import { toast } from 'sonner';
+import careerService from '../services/careerService';
 
 const Careers = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCareer, setSelectedCareer] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Mock career data (will be replaced with API call)
   const careers = [
@@ -197,6 +202,62 @@ const Careers = () => {
     }
   };
 
+  // Handle AI Recommendations
+  const handleGetAIRecommendations = async () => {
+    setLoading(true);
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const onboardingData = JSON.parse(localStorage.getItem('onboardingData'));
+      const assessmentResults = JSON.parse(localStorage.getItem('assessmentResults'));
+
+      const userData = {
+        userId: user?._id,
+        name: user?.name,
+        email: user?.email,
+        dreamCareer: onboardingData?.dreamCareer || user?.dreamCareer,
+        currentYear: onboardingData?.currentYear,
+        experienceLevel: onboardingData?.experienceLevel,
+        knownSkills: onboardingData?.knownSkills || [],
+        assessmentScore: assessmentResults?.score,
+        strengths: assessmentResults?.strengths || [],
+        weaknesses: assessmentResults?.weaknesses || []
+      };
+
+      console.log('Sending to AI:', userData);
+      const response = await careerService.getRecommendations(userData);
+      
+      if (response.status === 'success') {
+        toast.success('AI recommendations generated! 🎉');
+        console.log('AI Recommendations:', response.data);
+        // TODO: Update careers with AI response when backend returns recommendations
+      }
+    } catch (error) {
+      console.error('AI Recommendations Error:', error);
+      toast.error('AI service is currently unavailable. Showing default careers.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Start Learning Path
+  const handleStartLearningPath = () => {
+    if (!selectedCareer) return;
+    
+    // Save selected career for roadmap generation
+    localStorage.setItem('selectedCareer', JSON.stringify({
+      title: selectedCareer.title,
+      learningPath: selectedCareer.learningPath,
+      difficulty: selectedCareer.difficulty,
+      timeToLearn: selectedCareer.timeToLearn
+    }));
+    
+    toast.success(`Starting learning path for ${selectedCareer.title}! 🚀`);
+    
+    // Close modal and navigate to roadmap
+    setSelectedCareer(null);
+    navigate('/roadmap');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -209,9 +270,18 @@ const Careers = () => {
             AI-powered career paths based on your skills and interests
           </p>
         </div>
-        <Button>
-          <Sparkles className="w-5 h-5 mr-2" />
-          Get AI Recommendations
+        <Button onClick={handleGetAIRecommendations} disabled={loading}>
+          {loading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-5 h-5 mr-2" />
+              Get AI Recommendations
+            </>
+          )}
         </Button>
       </div>
 
@@ -377,7 +447,7 @@ const Careers = () => {
         </div>
       )}
 
-      {/* Career Detail Modal would go here */}
+      {/* Career Detail Modal */}
       {selectedCareer && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -426,7 +496,11 @@ const Careers = () => {
                 </div>
               </div>
 
-              <Button className="w-full" size="lg">
+              <Button 
+                className="w-full" 
+                size="lg"
+                onClick={handleStartLearningPath}
+              >
                 Start Learning Path
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>

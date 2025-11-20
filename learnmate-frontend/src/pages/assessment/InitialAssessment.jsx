@@ -16,6 +16,7 @@ import { Card, CardContent } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import { toast } from 'sonner';
+import onboardingService from '../../services/onboardingService';
 
 const InitialAssessment = () => {
   const navigate = useNavigate();
@@ -234,7 +235,7 @@ const InitialAssessment = () => {
     };
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const unanswered = questions.length - Object.keys(answers).length;
     
     if (unanswered > 0) {
@@ -244,17 +245,22 @@ const InitialAssessment = () => {
       if (!confirm) return;
     }
 
-    setIsSubmitting(true);
     const results = calculateResults();
-    
-    // Save results to localStorage
-    localStorage.setItem('assessmentResults', JSON.stringify(results));
-    toast.success('Assessment completed! 🎉');
-    
-    // Redirect to results page
-    setTimeout(() => {
+    setIsSubmitting(true);
+    try {
+      await onboardingService.saveStep('assessment', {
+        score: results.score,
+        results
+      });
+      localStorage.setItem('assessmentResults', JSON.stringify(results));
+      toast.success('Assessment completed! 🎉');
       navigate('/assessment/results');
-    }, 1000);
+    } catch (error) {
+      console.error('Failed to save assessment results', error);
+      toast.error(error.response?.data?.message || 'Failed to save assessment results. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const currentQ = questions[currentQuestion];

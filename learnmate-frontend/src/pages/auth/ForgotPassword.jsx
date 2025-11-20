@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Mail, ArrowLeft, CheckCircle, Send, GraduationCap } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/input';
+import authService from '../../services/authService';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -30,17 +31,19 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      // TODO: Replace with actual API call
-      // const response = await api.post('/api/auth/forgot-password', { email: data.email });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      const response = await authService.requestPasswordReset(data.email);
+
       setSubmittedEmail(data.email);
       setIsSubmitted(true);
-      toast.success('Password reset email sent! Check your inbox.');
+      if (response.data?.data?.resetToken) {
+        toast.success('Password reset token generated (dev use).');
+        console.info('Password reset token:', response.data.data.resetToken);
+      } else {
+        toast.success('Password reset email sent! Check your inbox.');
+      }
     } catch (error) {
-      toast.error('Failed to send reset email. Please try again.');
+      const message = error.response?.data?.message || 'Failed to send reset email. Please try again.';
+      toast.error(message);
     } finally {
       setLoading(false);
     }

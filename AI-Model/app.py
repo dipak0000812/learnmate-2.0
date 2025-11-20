@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask.json.provider import DefaultJSONProvider
 import logging
 from datetime import datetime
 import os
-import json
 import numpy as np
 
 from models.quiz_evaluator import QuizEvaluator
@@ -11,9 +11,8 @@ from models.roadmap_generator import RoadmapGenerator
 from models.career_recommender import CareerRecommender
 
 
-# Custom JSON encoder for NumPy types
-class NumpyEncoder(json.JSONEncoder):
-    """Custom JSON encoder for NumPy types"""
+# Custom JSON provider for NumPy types
+class NumpyJSONProvider(DefaultJSONProvider):
     def default(self, obj):
         if isinstance(obj, np.integer):
             return int(obj)
@@ -21,14 +20,15 @@ class NumpyEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
-        elif isinstance(obj, np.bool_):
+        elif isinstance(obj, (np.bool_, bool)):
             return bool(obj)
-        return super(NumpyEncoder, self).default(obj)
+        return super().default(obj)
 
 
 # Initialize Flask app
 app = Flask(__name__)
-app.json_encoder = NumpyEncoder
+app.json_provider_class = NumpyJSONProvider
+app.json = app.json_provider_class(app)
 CORS(app)
 
 # Configure logging

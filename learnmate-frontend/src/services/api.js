@@ -1,16 +1,6 @@
-// src/services/api.js - Updated version with token refresh
-import axios from 'axios';
+// src/services/api.js - axios instance with token refresh handling
+import api from './axiosInstance';
 import tokenService from './tokenService';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000,
-});
 
 // Request interceptor - Add auth token and check expiry
 api.interceptors.request.use(
@@ -32,11 +22,9 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    console.log('🚀 API Request:', config.method.toUpperCase(), config.url);
     return config;
   },
   (error) => {
-    console.error('❌ Request Error:', error);
     return Promise.reject(error);
   }
 );
@@ -49,8 +37,6 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-
-    console.error('❌ API Error:', error.response?.status, error.response?.data);
 
     // If 401 and haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {

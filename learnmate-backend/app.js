@@ -6,6 +6,8 @@ const corsConfig = require('./config/cors');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const errorMiddleware = require('./middleware/errorMiddleware');
 
 const authRoutes = require('./routes/authRoutes');
@@ -15,6 +17,9 @@ const gamificationRoutes = require('./routes/gamificationRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const assessmentRoutes = require('./routes/assessmentRoutes');
 const roadmapRoutes = require('./routes/roadmapRoutes');
+const onboardingRoutes = require('./routes/onboardingRoutes');
+
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:5001';
 
 const app = express();
 
@@ -25,6 +30,7 @@ connectDB();
 app.use(helmet());
 app.use(cors(corsConfig));
 app.use(express.json());
+app.use(cookieParser());
 app.use(morgan('dev'));
 
 // Trust proxy (needed for accurate IPs behind proxies)
@@ -40,6 +46,20 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// AI proxy
+if (AI_SERVICE_URL) {
+  app.use(
+    '/api/ai',
+    createProxyMiddleware({
+      target: AI_SERVICE_URL,
+      changeOrigin: true,
+      pathRewrite: { '^/api/ai': '' },
+      secure: false,
+      proxyTimeout: Number(process.env.AI_SERVICE_TIMEOUT || 15000)
+    })
+  );
+}
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -48,6 +68,7 @@ app.use('/api/gamification', gamificationRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/roadmaps', roadmapRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 
 // Health route
 app.get('/', (req, res) => res.json({ status: 'ok', service: 'learnmate-backend' }));

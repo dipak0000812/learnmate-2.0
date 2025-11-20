@@ -19,6 +19,12 @@ router.post(
   controller.submit
 );
 
+router.get(
+  '/history',
+  auth,
+  controller.history
+);
+
 module.exports = router;
 
 

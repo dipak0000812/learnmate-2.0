@@ -1,11 +1,81 @@
+const crypto = require('crypto');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
+const emailService = require('../services/emailService');
+
+const ACCESS_TOKEN_TTL = process.env.JWT_EXPIRES_IN || '1h';
+const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+const REFRESH_TOKEN_TTL = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
+const REFRESH_COOKIE_NAME = 'refreshToken';
+const isProd = process.env.NODE_ENV === 'production';
+const refreshCookieMaxAge = (() => {
+    const seconds = typeof REFRESH_TOKEN_TTL === 'string' && REFRESH_TOKEN_TTL.endsWith('d')
+        ? parseInt(REFRESH_TOKEN_TTL, 10) * 24 * 60 * 60
+        : 30 * 24 * 60 * 60;
+    return seconds * 1000;
+})();
+
+const buildUserResponse = (user) => ({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    college: user.college,
+    semester: user.semester,
+    branch: user.branch,
+    dreamCareer: user.dreamCareer,
+    skillLevel: user.skillLevel,
+    targetCompany: user.targetCompany,
+    emailVerified: user.emailVerified,
+    onboardingCompleted: user.onboardingCompleted,
+    personalizedRoadmap: user.personalizedRoadmap
+});
+
+const createAccessToken = (userId) =>
+    jwt.sign({ _id: userId }, process.env.JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL });
+
+const createRefreshToken = (userId) =>
+    jwt.sign({ _id: userId }, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_TOKEN_TTL });
+
+const setRefreshCookie = (res, token) => {
+    if (!token) return;
+    res.cookie(REFRESH_COOKIE_NAME, token, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        maxAge: refreshCookieMaxAge,
+        path: '/api/auth'
+    });
+};
+
+const clearRefreshCookie = (res) => {
+    res.clearCookie(REFRESH_COOKIE_NAME, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        path: '/api/auth'
+    });
+};
+
+const sendAuthResponse = (res, user, statusCode = 200) => {
+    const token = createAccessToken(user._id);
+    const refreshToken = createRefreshToken(user._id);
+    setRefreshCookie(res, refreshToken);
+
+    res.status(statusCode).json({
+        status: 'success',
+        data: {
+            token,
+            user: buildUserResponse(user)
+        }
+    });
+};
+
+const generateToken = () => crypto.randomBytes(32).toString('hex');
 
 // Register a new user
 exports.register = async (req, res, next) => {
-    // Validate input
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ status: 'fail', message: 'Validation error', errors: errors.array() });
@@ -13,42 +83,53 @@ exports.register = async (req, res, next) => {
 
     const { name, email, password, college, semester, branch } = req.body;
     try {
-        let user = await User.findOne({ email });
-        if (user) {
-            return res.status(400).json({ message: 'User already exists' });
+        const existing = await User.findOne({ email });
+        if (existing) {
+            return res.status(400).json({ status: 'fail', message: 'Email already registered' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const verificationToken = generateToken();
+        const verificationExpires = Date.now() + 24 * 60 * 60 * 1000;
 
-        user = new User({
+        const user = await User.create({
             name,
             email,
             password: hashedPassword,
             college: college || '',
             semester: semester || 1,
-            branch: branch || ''
+            branch: branch || '',
+            emailVerificationToken: verificationToken,
+            emailVerificationExpires: verificationExpires,
+            emailVerified: false,
+            onboardingCompleted: false
         });
 
-        await user.save();
+        let emailSent = false;
+        try {
+            await emailService.sendVerificationEmail(user.email, verificationToken, user.name);
+            emailSent = true;
+        } catch (emailError) {
+            console.error('Failed to send verification email:', emailError.message);
+        }
 
-        const payload = { _id: user._id };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
+        const token = createAccessToken(user._id);
+        const refreshToken = createRefreshToken(user._id);
+        setRefreshCookie(res, refreshToken);
 
         res.status(201).json({
             status: 'success',
+            message: emailSent
+                ? 'Registration successful! Please check your email to verify your account.'
+                : 'Registration successful! Email verification pending (check SMTP configuration).',
             data: {
                 token,
-                user: {
-                    _id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    college: user.college,
-                    semester: user.semester,
-                    branch: user.branch
-                }
+                user: buildUserResponse(user),
+                emailSent
             }
         });
     } catch (err) {
+        console.error('Registration error:', err);
         next(err);
     }
 };
@@ -73,26 +154,7 @@ exports.login = async (req, res, next) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        const payload = { _id: user._id };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-        res.json({
-            status: 'success',
-            data: {
-                token,
-                user: {
-                    _id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    college: user.college,
-                    semester: user.semester,
-                    branch: user.branch,
-                    dreamCareer: user.dreamCareer,
-                    skillLevel: user.skillLevel,
-                    targetCompany: user.targetCompany
-                }
-            }
-        });
+        sendAuthResponse(res, user);
     } catch (err) {
         next(err);
     }
@@ -107,4 +169,134 @@ exports.me = async (req, res, next) => {
     } catch (err) {
         next(err);
     }
+};
+
+// Refresh access token
+exports.refreshToken = async (req, res, next) => {
+    try {
+        const { refreshToken } = req.cookies || {};
+        if (!refreshToken) {
+            return res.status(401).json({ status: 'fail', message: 'Refresh token missing' });
+        }
+
+        const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+        const user = await User.findById(decoded._id);
+
+        if (!user) {
+            return res.status(404).json({ status: 'fail', message: 'User no longer exists' });
+        }
+
+        const token = createAccessToken(user._id);
+        setRefreshCookie(res, createRefreshToken(user._id));
+
+        res.json({ status: 'success', data: { token } });
+    } catch (err) {
+        if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+            return res.status(401).json({ status: 'fail', message: 'Invalid or expired refresh token' });
+        }
+        next(err);
+    }
+};
+
+exports.logout = (req, res) => {
+    clearRefreshCookie(res);
+    res.json({ status: 'success', message: 'Logged out' });
+};
+
+exports.forgotPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (user) {
+            user.passwordResetToken = generateToken();
+            user.passwordResetExpires = Date.now() + 60 * 60 * 1000;
+            await user.save();
+        }
+        res.json({
+            status: 'success',
+            message: 'If an account exists, reset instructions have been generated.',
+            data: user ? { resetToken: user.passwordResetToken } : undefined
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.resetPassword = async (req, res, next) => {
+    try {
+        const { token, password } = req.body;
+        const user = await User.findOne({
+            passwordResetToken: token,
+            passwordResetExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ status: 'fail', message: 'Invalid or expired reset token' });
+        }
+
+        user.password = await bcrypt.hash(password, 10);
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+
+        res.json({ status: 'success', message: 'Password updated successfully' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.validateResetToken = async (req, res, next) => {
+    try {
+        const { token } = req.body;
+        const user = await User.findOne({
+            passwordResetToken: token,
+            passwordResetExpires: { $gt: Date.now() }
+        }).select('_id email');
+
+        if (!user) {
+            return res.status(400).json({ status: 'fail', message: 'Invalid or expired reset token' });
+        }
+
+        res.json({ status: 'success', data: { email: user.email } });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.verifyEmail = async (req, res, next) => {
+    try {
+        const { token } = req.body;
+        const user = await User.findOne({
+            emailVerificationToken: token,
+            emailVerificationExpires: { $gt: Date.now() }
+        });
+        if (!user) {
+            return res.status(400).json({ status: 'fail', message: 'Invalid verification token' });
+        }
+
+        user.emailVerified = true;
+        user.emailVerificationToken = undefined;
+        user.emailVerificationExpires = undefined;
+        await user.save();
+
+        res.json({ status: 'success', message: 'Email verified successfully' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.googleAuth = (req, res) => {
+    res.status(501).json({ status: 'fail', message: 'Google OAuth is not configured yet.' });
+};
+
+exports.googleCallback = (req, res) => {
+    res.status(501).json({ status: 'fail', message: 'Google OAuth callback is not configured yet.' });
+};
+
+exports.githubAuth = (req, res) => {
+    res.status(501).json({ status: 'fail', message: 'GitHub OAuth is not configured yet.' });
+};
+
+exports.githubCallback = (req, res) => {
+    res.status(501).json({ status: 'fail', message: 'GitHub OAuth callback is not configured yet.' });
 };

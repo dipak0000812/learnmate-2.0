@@ -10,70 +10,149 @@ import {
   ArrowRight,
   Zap,
   Award,
-  Brain
+  Brain,
+  Loader2
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import useAuthStore from '../store/authStore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import dashboardService from '../services/dashboardService';
+import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
   const { user } = useAuthStore();
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalQuizzes: 12,
-    completedQuizzes: 8,
-    totalPoints: 1250,
-    currentLevel: 5,
-    streak: 7,
-    roadmapProgress: 65
+    totalQuizzes: 0,
+    completedQuizzes: 0,
+    totalPoints: 0,
+    currentLevel: 1,
+    streak: 0,
+    roadmapProgress: 0
   });
 
-  // Mock data for progress chart
-  const progressData = [
-    { day: 'Mon', score: 65 },
-    { day: 'Tue', score: 72 },
-    { day: 'Wed', score: 68 },
-    { day: 'Thu', score: 85 },
-    { day: 'Fri', score: 78 },
-    { day: 'Sat', score: 90 },
-    { day: 'Sun', score: 88 },
-  ];
+  const [progressData, setProgressData] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
 
-  // Recent activities
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'quiz',
-      title: 'Completed React Basics Quiz',
-      score: 85,
-      time: '2 hours ago',
-      icon: BookOpen,
-      color: 'text-blue-600'
-    },
-    {
-      id: 2,
-      type: 'achievement',
-      title: 'Earned "Quick Learner" Badge',
-      time: '5 hours ago',
-      icon: Award,
-      color: 'text-purple-600'
-    },
-    {
-      id: 3,
-      type: 'roadmap',
-      title: 'Completed JavaScript Milestone',
-      time: '1 day ago',
-      icon: Target,
-      color: 'text-green-600'
-    },
-    {
-      id: 4,
-      type: 'quiz',
-      title: 'Started AI/ML Fundamentals',
-      time: '2 days ago',
-      icon: Brain,
-      color: 'text-orange-600'
-    },
-  ];
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        // Fetch all data in parallel
+        const [gamificationRes, roadmapRes, assessmentRes] = await Promise.allSettled([
+          dashboardService.getGamificationStats(),
+          dashboardService.getMyRoadmap(),
+          dashboardService.getAssessmentHistory(5)
+        ]);
+
+        // Update stats from gamification
+        if (gamificationRes.status === 'fulfilled' && gamificationRes.value?.data) {
+          const gData = gamificationRes.value.data;
+          setStats(prev => ({
+            ...prev,
+            totalPoints: gData.points || 0,
+            currentLevel: gData.level || 1,
+            streak: gData.streak || 0
+          }));
+        }
+
+        // Update roadmap progress
+        if (roadmapRes.status === 'fulfilled' && roadmapRes.value?.data) {
+          const roadmap = roadmapRes.value.data;
+          // Calculate progress from phases or milestones
+          if (roadmap.phases) {
+            const completedPhases = roadmap.phases.filter(p => p.completed).length;
+            const totalPhases = roadmap.phases.length;
+            setStats(prev => ({
+              ...prev,
+              roadmapProgress: totalPhases > 0 ? Math.round((completedPhases / totalPhases) * 100) : 0
+            }));
+          } else if (roadmap.progressPercent !== undefined) {
+            setStats(prev => ({
+              ...prev,
+              roadmapProgress: roadmap.progressPercent || 0
+            }));
+          }
+        }
+
+        // Update quiz stats and recent activities from assessments
+        if (assessmentRes.status === 'fulfilled' && assessmentRes.value?.data) {
+          const assessments = assessmentRes.value.data || [];
+          setStats(prev => ({
+            ...prev,
+            completedQuizzes: assessments.length,
+            totalQuizzes: assessments.length // For now, use completed as total
+          }));
+
+          // Build recent activities from assessments
+          const activities = assessments.slice(0, 4).map((assessment, idx) => ({
+            id: assessment._id || idx,
+            type: 'quiz',
+            title: `Completed ${assessment.career || 'Assessment'}`,
+            score: assessment.total > 0 ? Math.round((assessment.score / assessment.total) * 100) : null,
+            time: assessment.createdAt ? formatDistanceToNow(new Date(assessment.createdAt), { addSuffix: true }) : 'Recently',
+            icon: BookOpen,
+            color: 'text-blue-600'
+          }));
+          setRecentActivities(activities);
+
+          // Generate progress chart data from assessment scores (last 7 assessments or mock if less)
+          if (assessments.length > 0) {
+            const chartData = assessments.slice(-7).map((assess, idx) => {
+              const score = assess.total > 0 ? Math.round((assess.score / assess.total) * 100) : 0;
+              const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+              return {
+                day: days[idx % 7] || `Day ${idx + 1}`,
+                score
+              };
+            });
+            // Pad with zeros if less than 7
+            while (chartData.length < 7) {
+              chartData.unshift({ day: 'Mon', score: 0 });
+            }
+            setProgressData(chartData);
+          } else {
+            // Default empty chart
+            setProgressData([
+              { day: 'Mon', score: 0 },
+              { day: 'Tue', score: 0 },
+              { day: 'Wed', score: 0 },
+              { day: 'Thu', score: 0 },
+              { day: 'Fri', score: 0 },
+              { day: 'Sat', score: 0 },
+              { day: 'Sun', score: 0 }
+            ]);
+          }
+        }
+
+        // Add achievement activity if user has badges
+        if (gamificationRes.status === 'fulfilled' && gamificationRes.value?.data?.achievements?.length > 0) {
+          const badges = gamificationRes.value.data.achievements;
+          setRecentActivities(prev => [
+            {
+              id: 'achievement',
+              type: 'achievement',
+              title: `Earned "${badges[badges.length - 1]}" Badge`,
+              time: 'Recently',
+              icon: Award,
+              color: 'text-purple-600'
+            },
+            ...prev.slice(0, 3)
+          ]);
+        }
+
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   // Recommended actions
   const recommendations = [
@@ -102,6 +181,17 @@ const Dashboard = () => {
       color: 'from-green-500 to-green-600'
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

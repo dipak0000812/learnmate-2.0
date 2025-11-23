@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, GraduationCap } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/input';
+import authService from '../../services/authService';
 
 const resetPasswordSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -40,20 +41,19 @@ const ResetPassword = () => {
   useEffect(() => {
     // Validate token on component mount
     const validateToken = async () => {
-      if (!token || !email) {
+      if (!token) {
         setTokenValid(false);
         setValidating(false);
         return;
       }
 
       try {
-        // TODO: Replace with actual API call to validate token
-        // const response = await api.post('/api/auth/validate-reset-token', { token, email });
-        
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        setTokenValid(true);
+        const response = await authService.validateResetToken(token);
+        if (response.data?.data?.email) {
+          setTokenValid(true);
+        } else {
+          setTokenValid(false);
+        }
       } catch (error) {
         setTokenValid(false);
         toast.error('Invalid or expired reset link');
@@ -69,16 +69,8 @@ const ResetPassword = () => {
     setLoading(true);
     
     try {
-      // TODO: Replace with actual API call
-      // const response = await api.post('/api/auth/reset-password', {
-      //   token,
-      //   email,
-      //   password: data.password
-      // });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await authService.resetPassword(token, data.password);
+
       toast.success('Password reset successful! Please login with your new password.');
       
       // Redirect to login after 2 seconds
@@ -86,7 +78,8 @@ const ResetPassword = () => {
         navigate('/login');
       }, 2000);
     } catch (error) {
-      toast.error('Failed to reset password. Please try again.');
+      const message = error.response?.data?.message || 'Failed to reset password. Please try again.';
+      toast.error(message);
     } finally {
       setLoading(false);
     }

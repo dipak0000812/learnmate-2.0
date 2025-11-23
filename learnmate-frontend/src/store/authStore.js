@@ -13,17 +13,11 @@ const useAuthStore = create((set) => ({
   login: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      console.log('🔐 Attempting login...', email);
       const response = await api.post('/api/auth/login', { email, password });
-      console.log('✅ Login response:', response.data);
+      const { token, user } = response.data.data;
       
-      const { token, refreshToken, user } = response.data.data;
-      
-      // Store both access and refresh tokens
+      // Store access token
       localStorage.setItem('token', token);
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
       localStorage.setItem('user', JSON.stringify(user));
       
       // Initialize token refresh schedule
@@ -42,17 +36,11 @@ const useAuthStore = create((set) => ({
   register: async (userData) => {
     set({ loading: true, error: null });
     try {
-      console.log('📝 Attempting registration...', userData.email);
       const response = await api.post('/api/auth/register', userData);
-      console.log('✅ Register response:', response.data);
+      const { token, user } = response.data.data;
       
-      const { token, refreshToken, user } = response.data.data;
-      
-      // Store tokens
+      // Store token
       localStorage.setItem('token', token);
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
       localStorage.setItem('user', JSON.stringify(user));
       
       // Initialize token refresh schedule
@@ -68,12 +56,13 @@ const useAuthStore = create((set) => ({
     }
   },
 
-  logout: () => {
-    console.log('👋 Logging out...');
-    
-    // Clear tokens and stop refresh
+  logout: async () => {
+    try {
+      await api.post('/api/auth/logout');
+    } catch (err) {
+      // ignore logout errors
+    }
     tokenService.clearTokens();
-    
     set({ user: null, token: null, isAuthenticated: false });
   },
 

@@ -21,6 +21,11 @@ const roadmapSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   assessmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Assessment' },
   dreamCareer: { type: String, required: true },
+  title: { type: String, default: '' },
+  description: { type: String, default: '' },
+  estimatedDuration: { type: String, default: '' },
+  targetCompanies: { type: [String], default: [] },
+  phases: { type: Array, default: [] },
   milestones: { type: [milestoneSchema], default: [] },
   progressPercent: { type: Number, default: 0 },
   totalPointsAwarded: { type: Number, default: 0 }

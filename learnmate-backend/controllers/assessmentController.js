@@ -23,7 +23,28 @@ exports.submit = async (req, res, next) => {
     const sampleQ = questions[0];
     const assessment = await Assessment.create({ userId, career: sampleQ ? sampleQ.career : '', semester: sampleQ ? sampleQ.semester : 1, answers: checkedAnswers, score, total, timeTaken: timeTaken || 0 });
 
+    // Basic gamification: award points equal to score, update level
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    if (user) {
+      const pointsEarned = Math.max(score, 0);
+      user.totalPoints = (user.totalPoints || 0) + pointsEarned;
+      user.level = Math.max(1, Math.floor((user.totalPoints || 0) / 500) + 1);
+      await user.save();
+    }
+
     res.status(201).json({ status: 'success', data: assessment });
+  } catch (err) { next(err); }
+};
+
+exports.history = async (req, res, next) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 5, 50);
+    const assessments = await Assessment.find({ userId: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+    res.json({ status: 'success', data: assessments });
   } catch (err) { next(err); }
 };
 

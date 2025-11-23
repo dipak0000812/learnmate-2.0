@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import useAuthStore from './store/authStore';
 import tokenService from './services/tokenService';
@@ -12,6 +12,7 @@ import ResetPassword from './pages/auth/ResetPassword';
 import OAuthCallback from './pages/auth/OAuthCallback';
 import VerifyEmail from './pages/auth/VerifyEmail';
 import VerifyEmailNotice from './pages/auth/VerifyEmailNotice';
+import VerifyEmailPending from './pages/auth/VerifyEmailPending';
 
 // Main Pages
 import Dashboard from './pages/Dashboard';
@@ -35,10 +36,24 @@ import AssessmentResults from './pages/assessment/AssessmentResults';
 // Layout
 import MainLayout from './components/layout/MainLayout';
 
-// Protected Route
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? children : <Navigate to="/login" />;
+// Protected Route with email/onboarding guards
+const ProtectedRoute = ({ children, requireEmailVerified = true, requireOnboarding = true }) => {
+  const { user, isAuthenticated } = useAuthStore();
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (requireEmailVerified && !user?.emailVerified) {
+    return <Navigate to="/verify-email-notice" replace />;
+  }
+
+  if (requireOnboarding && user?.emailVerified && !user?.onboardingCompleted) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  return children;
 };
 
 // Public Route
@@ -89,7 +104,14 @@ function App() {
 
         {/* 📩 Newly Added Email Verification Routes */}
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/verify-email-notice" element={<VerifyEmailNotice />} />
+        <Route
+          path="/verify-email-notice"
+          element={
+            <ProtectedRoute requireEmailVerified={false} requireOnboarding={false}>
+              <VerifyEmailPending />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Onboarding */}
         <Route

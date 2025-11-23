@@ -21,11 +21,15 @@ import { Card, CardContent, CardHeader } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import { toast } from 'sonner';
+import onboardingService from '../../services/onboardingService';
+import useAuthStore from '../../store/authStore';
 
 const AssessmentResults = () => {
   const navigate = useNavigate();
+  const { updateUser } = useAuthStore();
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     // Load results from localStorage
@@ -39,13 +43,22 @@ const AssessmentResults = () => {
     setLoading(false);
   }, [navigate]);
 
-  const handleGenerateRoadmap = () => {
-    toast.success('Generating your personalized roadmap...');
-    // Save that user has completed assessment
-    localStorage.setItem('assessmentCompleted', 'true');
-    setTimeout(() => {
-      navigate('/roadmap');
-    }, 1500);
+  const handleGenerateRoadmap = async () => {
+    try {
+      setGenerating(true);
+      const response = await onboardingService.complete();
+      const updatedUser = response.data?.data?.user;
+      if (updatedUser) {
+        updateUser(updatedUser);
+      }
+      toast.success('Your personalized roadmap is ready!');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Failed to complete onboarding', error);
+      toast.error(error.response?.data?.message || 'Failed to generate roadmap. Please try again.');
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const categoryDetails = {
@@ -318,11 +331,21 @@ const AssessmentResults = () => {
           <Button
             onClick={handleGenerateRoadmap}
             size="lg"
-            className="bg-gradient-to-r from-teal-600 to-blue-600 text-lg px-8 py-6"
+            disabled={generating}
+            className="bg-gradient-to-r from-teal-600 to-blue-600 text-lg px-8 py-6 disabled:opacity-70"
           >
-            <Award className="w-5 h-5 mr-2" />
-            Generate My Personalized Roadmap
-            <ArrowRight className="w-5 h-5 ml-2" />
+            {generating ? (
+              <>
+                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3" />
+                Generating your roadmap...
+              </>
+            ) : (
+              <>
+                <Award className="w-5 h-5 mr-2" />
+                Generate My Personalized Roadmap
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </>
+            )}
           </Button>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">
             This will create a custom learning path based on your assessment results

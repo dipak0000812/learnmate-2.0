@@ -12,13 +12,22 @@ exports.generate = async (req, res, next) => {
 
     const assessment = assessmentId ? await Assessment.findById(assessmentId) : null;
 
-    const milestones = aiRoadmapGenerator({
+    const aiData = aiRoadmapGenerator({
       userProfile: user,
       assessmentSummary: assessment,
       dreamCareer
     });
 
-    const roadmap = await Roadmap.create({ userId: user._id, assessmentId: assessment?._id, dreamCareer, milestones, progressPercent: 0, totalPointsAwarded: 0 });
+    const roadmap = await Roadmap.create({
+      userId: user._id,
+      assessmentId: assessment?._id,
+      dreamCareer,
+      title: `Roadmap for ${dreamCareer}`,
+      description: 'Personalized learning plan',
+      milestones: aiData,
+      progressPercent: 0,
+      totalPointsAwarded: 0
+    });
 
     res.status(201).json({ status: 'success', data: { roadmapId: roadmap._id, roadmap } });
   } catch (err) { next(err); }
@@ -36,6 +45,16 @@ exports.listByUser = async (req, res, next) => {
   try {
     const roadmaps = await Roadmap.find({ userId: req.params.userId }).sort({ createdAt: -1 });
     res.json({ status: 'success', data: roadmaps });
+  } catch (err) { next(err); }
+};
+
+exports.getMyRoadmap = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).populate('personalizedRoadmap');
+    if (!user || !user.personalizedRoadmap) {
+      return res.status(404).json({ status: 'fail', message: 'No roadmap found. Complete onboarding to generate one.' });
+    }
+    res.json({ status: 'success', data: user.personalizedRoadmap });
   } catch (err) { next(err); }
 };
 

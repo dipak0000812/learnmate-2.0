@@ -1,6 +1,8 @@
 // src/services/tokenService.js
-import api from './api';
+import api from './axiosInstance';
 import { jwtDecode } from 'jwt-decode';
+
+const REFRESH_ENDPOINT = '/api/auth/refresh';
 
 class TokenService {
   constructor() {
@@ -52,35 +54,15 @@ class TokenService {
     this.isRefreshing = true;
 
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
+      const response = await api.post(REFRESH_ENDPOINT);
+
+      const { token: newToken } = response.data?.data || {};
+      if (!newToken) {
+        throw new Error('Refresh token response missing access token');
       }
-
-      // TODO: Replace with actual API endpoint when backend adds refresh endpoint
-      // Uncomment when backend implements POST /api/auth/refresh-token
-      // const response = await api.post('/api/auth/refresh-token', { refreshToken });
-      // const { token: newToken, refreshToken: newRefreshToken } = response.data.data;
-      
-      // For now, simulate API call (remove this when backend is ready)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const response = {
-        data: {
-          data: {
-            token: 'new_access_token_' + Date.now(),
-            refreshToken: 'new_refresh_token_' + Date.now()
-          }
-        }
-      };
-
-      const { token: newToken, refreshToken: newRefreshToken } = response.data.data;
 
       // Update tokens
       localStorage.setItem('token', newToken);
-      if (newRefreshToken) {
-        localStorage.setItem('refreshToken', newRefreshToken);
-      }
 
       // Notify all waiting requests
       this.refreshSubscribers.forEach(({ resolve }) => resolve(newToken));
@@ -127,6 +109,10 @@ class TokenService {
       const hours = Math.floor(refreshTime / 1000 / 60 / 60);
       const minutes = Math.floor((refreshTime / 1000 / 60) % 60);
       console.log(`⏰ Token expires in ${hours}h ${minutes}m`);
+    } else {
+      this.refreshToken().catch(() => {
+        // noop - downstream handlers already redirect on failure
+      });
     }
   }
 
@@ -150,7 +136,6 @@ class TokenService {
   // Clear all tokens
   clearTokens() {
     localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     
     if (this.refreshTimer) {

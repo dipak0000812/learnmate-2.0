@@ -7,7 +7,7 @@ const careerService = {
       console.log('🤖 Requesting AI career recommendations:', userData);
       
       // Try the AI endpoint
-      const response = await api.post('/ai/recommend-career', userData);
+      const response = await api.post('/api/ai/recommend-career', userData);
       return response.data;
     } catch (error) {
       // If 404, the AI endpoint doesn't exist yet

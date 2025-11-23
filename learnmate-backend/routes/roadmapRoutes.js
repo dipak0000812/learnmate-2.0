@@ -17,7 +17,8 @@ router.post(
   controller.generate
 );
 
-// Order specific: define /user/:userId before /:id to prevent conflicts
+router.get('/my', auth, controller.getMyRoadmap);
+router.get('/my-roadmap', auth, controller.getMyRoadmap);
 router.get('/user/:userId', auth, [param('userId').isString()], validate, controller.listByUser);
 router.get('/:id', auth, [param('id').isString()], validate, controller.getById);
 router.put('/:id/goals/:goalId/complete', auth, [param('id').isString(), param('goalId').isString()], validate, controller.completeGoal);

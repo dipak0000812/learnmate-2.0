@@ -15,14 +15,14 @@ const useAuthStore = create((set) => ({
     try {
       const response = await api.post('/api/auth/login', { email, password });
       const { token, user } = response.data.data;
-      
+
       // Store access token
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       // Initialize token refresh schedule
       tokenService.scheduleTokenRefresh(token);
-      
+
       set({ user, token, isAuthenticated: true, loading: false });
       return { success: true };
     } catch (error) {
@@ -38,14 +38,14 @@ const useAuthStore = create((set) => ({
     try {
       const response = await api.post('/api/auth/register', userData);
       const { token, user } = response.data.data;
-      
+
       // Store token
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       // Initialize token refresh schedule
       tokenService.scheduleTokenRefresh(token);
-      
+
       set({ user, token, isAuthenticated: true, loading: false });
       return { success: true };
     } catch (error) {
@@ -82,6 +82,20 @@ const useAuthStore = create((set) => ({
       return { success: false };
     }
   },
+  // Fetch fresh user data (for real-time stats updates)
+  fetchUser: async () => {
+    try {
+      const response = await api.get('/api/auth/me'); // Assuming /me endpoint exists or similar
+      const user = response.data.data;
+      localStorage.setItem('user', JSON.stringify(user));
+      set({ user });
+      return user;
+    } catch (error) {
+      console.error('Failed to fetch fresh user data:', error);
+      return null;
+    }
+  },
 }));
 
 export default useAuthStore;
+export { useAuthStore };

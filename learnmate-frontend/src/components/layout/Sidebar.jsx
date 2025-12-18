@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  Map, 
-  Briefcase, 
-  User, 
+import {
+  LayoutDashboard,
+  BookOpen,
+  Map,
+  Briefcase,
+  User,
   Award,
   BarChart3,
   Settings,
@@ -14,8 +14,15 @@ import {
   Target
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import useAuthStore from '../../store/authStore';
 
 const Sidebar = ({ isOpen, closeSidebar }) => {
+  const { user, fetchUser } = useAuthStore();
+
+  React.useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
   const location = useLocation();
 
   const menuItems = [
@@ -33,8 +40,28 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
 
   const isActive = (path) => location.pathname === path;
 
+  // Level calculation (basic example: 1 level per 1000 XP)
+  const level = user?.level || Math.floor((user?.totalPoints || 0) / 1000) + 1;
+  const currentXP = user?.totalPoints || 0;
+  const nextLevelXP = level * 1000;
+  const progressPercent = ((currentXP % 1000) / 1000) * 100;
+
   return (
     <>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(to bottom, #0ea5e9, #14b8a6);
+          border-radius: 3px;
+        }
+      `}} />
+
       {/* Mobile Overlay */}
       {isOpen && (
         <div
@@ -46,7 +73,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-r border-gray-200 dark:border-gray-700 transition-transform duration-300 z-40',
+          'fixed top-16 lg:top-0 left-0 h-[calc(100vh-4rem)] lg:h-screen w-64 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-r border-gray-200 dark:border-gray-700 transition-transform duration-300 z-40',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
@@ -65,8 +92,8 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
                   className={cn(
                     'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden',
                     active
-                      ? 'bg-gradient-to-r from-blue-600 to-teal-600 text-white shadow-lg shadow-teal-500/50 scale-105'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-teal-50 dark:hover:from-gray-700 dark:hover:to-gray-600 hover:scale-105'
+                      ? 'bg-gradient-to-r from-blue-600 to-teal-600 text-white shadow-lg shadow-teal-500/50 scale-[1.02]'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-teal-50 dark:hover:from-gray-700 dark:hover:to-gray-600 hover:scale-[1.02]'
                   )}
                 >
                   {active && (
@@ -96,31 +123,18 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-600 dark:text-gray-400">Level</span>
-                    <span className="font-semibold text-teal-600 dark:text-teal-400">7</span>
+                    <span className="font-semibold text-teal-600 dark:text-teal-400">{level}</span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                    <div className="bg-gradient-to-r from-blue-600 to-teal-600 h-2 rounded-full animate-pulse" style={{ width: '65%' }}></div>
+                    <div className="bg-gradient-to-r from-blue-600 to-teal-600 h-2 rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }}></div>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">3450 / 5000 XP</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{currentXP} / {nextLevelXP} XP</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </aside>
-
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #0ea5e9, #14b8a6);
-          border-radius: 3px;
-        }
-      `}</style>
     </>
   );
 };

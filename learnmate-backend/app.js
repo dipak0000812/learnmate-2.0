@@ -38,8 +38,8 @@ app.set('trust proxy', 1);
 
 // Rate limiter (basic)
 const limiter = rateLimit({
-  windowMs: Number(process.env.RATE_WINDOW_MS || 15 * 60 * 1000),
-  max: Number(process.env.RATE_MAX || 100),
+  windowMs: Number(process.env.RATE_WINDOW_MS || 15 * 60 * 1000), // 15 minutes
+  max: Number(process.env.RATE_MAX || 1000), // Increased from 100 to 1000 for dev
   standardHeaders: true,
   legacyHeaders: false,
   message: 'Too many requests from this IP, please try again later.'

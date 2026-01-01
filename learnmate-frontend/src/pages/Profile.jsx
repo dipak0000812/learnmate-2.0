@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { 
-  User, 
-  Mail, 
-  Briefcase, 
+import {
+  User,
+  Mail,
+  Briefcase,
   Calendar,
   Award,
   Trophy,
@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import Input from '../components/ui/input';
+import Input from '../components/ui/Input';
 import useAuthStore from '../store/authStore';
 import { toast } from 'sonner';
 
@@ -38,28 +38,58 @@ const Profile = () => {
     careerGoal: 'Full Stack Developer'
   });
 
-  // Mock user stats
-  const stats = {
-    totalPoints: 1250,
-    level: 5,
-    quizzesCompleted: 8,
-    totalQuizzes: 12,
-    roadmapProgress: 65,
-    streak: 7,
-    badges: 12,
-    joinDate: '2024-01-15'
-  };
+  // Fetch real user stats
+  const [stats, setStats] = useState({
+    totalPoints: 0,
+    level: 1,
+    quizzesCompleted: 0,
+    totalQuizzes: 0,
+    roadmapProgress: 0,
+    streak: 0,
+    badges: 0,
+    joinDate: user?.createdAt || new Date().toISOString()
+  });
 
-  const badges = [
-    { id: 1, name: 'Quick Learner', icon: '⚡', earned: true, date: '2024-02-10' },
-    { id: 2, name: 'First Quiz', icon: '🎯', earned: true, date: '2024-01-20' },
-    { id: 3, name: '7 Day Streak', icon: '🔥', earned: true, date: '2024-02-15' },
-    { id: 4, name: 'JavaScript Master', icon: '💻', earned: true, date: '2024-02-20' },
-    { id: 5, name: 'React Pro', icon: '⚛️', earned: true, date: '2024-03-01' },
-    { id: 6, name: 'Team Player', icon: '🤝', earned: false },
-    { id: 7, name: '30 Day Streak', icon: '🌟', earned: false },
-    { id: 8, name: 'AI Expert', icon: '🤖', earned: false }
-  ];
+  const [badges, setBadges] = useState([]);
+
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // Import API dynamically to avoid circular dep if any (optional)
+        const api = (await import('../services/api')).default;
+
+        const [gamificationRes, roadmapRes] = await Promise.all([
+          api.get('/gamification/me'),
+          api.get('/roadmaps/my-roadmap').catch(() => ({ data: { data: null } })) // Handle no roadmap
+        ]);
+
+        const gData = gamificationRes.data.data;
+        const rData = roadmapRes.data.data;
+
+        setStats({
+          totalPoints: gData.totalPoints || 0,
+          level: gData.level || 1,
+          quizzesCompleted: 0, // Backend doesn't send this yet, keep 0 or add endpoint
+          totalQuizzes: 0,
+          roadmapProgress: rData ? rData.progressPercent : 0,
+          streak: gData.streakDays || 0,
+          badges: gData.badges?.length || 0,
+          joinDate: user?.createdAt || new Date().toISOString()
+        });
+
+        // Map badges names to UI objects
+        // In a real app, we'd have a config for badge icons. 
+        // For now, we'll just show the IDs/Names returned by backend
+        setBadges(gData.badges?.map((b, i) => ({
+          id: i, name: b, icon: '🏆', earned: true, date: 'Recently'
+        })) || []);
+
+      } catch (error) {
+        console.error('Profile stats fetch error:', error);
+      }
+    };
+    fetchStats();
+  }, [user]);
 
   const recentActivity = [
     { id: 1, type: 'quiz', title: 'Completed React Basics Quiz', score: 85, date: '2 hours ago' },
@@ -325,11 +355,10 @@ const Profile = () => {
               {badges.map((badge) => (
                 <div
                   key={badge.id}
-                  className={`aspect-square rounded-xl flex flex-col items-center justify-center p-3 transition-all ${
-                    badge.earned
-                      ? 'bg-gradient-to-br from-blue-500 to-purple-500 text-white shadow-lg hover:scale-105'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-400 opacity-50'
-                  }`}
+                  className={`aspect-square rounded-xl flex flex-col items-center justify-center p-3 transition-all ${badge.earned
+                    ? 'bg-gradient-to-br from-blue-500 to-purple-500 text-white shadow-lg hover:scale-105'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 opacity-50'
+                    }`}
                   title={badge.name}
                 >
                   <span className="text-3xl mb-1">{badge.icon}</span>

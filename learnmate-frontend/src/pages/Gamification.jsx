@@ -25,19 +25,38 @@ const Gamification = () => {
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [selectedReward, setSelectedReward] = useState(null);
 
-  // User gamification data
-  const userData = {
-    level: 7,
-    currentXP: 3450,
-    nextLevelXP: 5000,
-    totalPoints: 3450,
-    coins: 850,
-    gems: 45,
-    streak: 12,
-    longestStreak: 18,
-    rank: 'Gold',
-    rankProgress: 65
-  };
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real gamification data
+  React.useEffect(() => {
+    const fetchGamificationData = async () => {
+      try {
+        const response = await import('../services/api').then(module => module.default.get('/gamification/me'));
+        setUserData({
+          ...response.data.data,
+          currentXP: response.data.data.xpCurrent,
+          nextLevelXP: response.data.data.xpNextLevel,
+          rank: 'Bronze', // Compute rank logic later
+          coins: response.data.data.coins || 0,
+          gems: response.data.data.gems || 0,
+          streak: response.data.data.streakDays || 0
+        });
+      } catch (error) {
+        console.error('Failed to fetch gamification stats:', error);
+        toast.error('Could not load your progress');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGamificationData();
+  }, []);
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading your achievements...</div>;
+  }
+
+  if (!userData) return null;
 
   // Daily challenges
   const dailyChallenges = [
@@ -250,10 +269,32 @@ const Gamification = () => {
     setShowRewardModal(true);
   };
 
-  const confirmPurchase = () => {
-    toast.success(`🎉 You purchased ${selectedReward.name}!`);
-    setShowRewardModal(false);
-    setSelectedReward(null);
+  const confirmPurchase = async () => {
+    try {
+      if (!selectedReward) return;
+
+      const response = await import('../services/api').then(module => module.default.post('/gamification/purchase', {
+        itemId: selectedReward.id,
+        cost: selectedReward.cost,
+        type: 'reward'
+      }));
+
+      if (response.data.status === 'success') {
+        toast.success(`🎉 You purchased ${selectedReward.name}!`);
+        // Update local state
+        setUserData(prev => ({
+          ...prev,
+          coins: response.data.data.coins,
+          gems: response.data.data.gems
+        }));
+      }
+    } catch (error) {
+      console.error('Purchase failed:', error);
+      toast.error(error.response?.data?.message || 'Purchase failed');
+    } finally {
+      setShowRewardModal(false);
+      setSelectedReward(null);
+    }
   };
 
   const claimChallenge = (challenge) => {
@@ -286,8 +327,8 @@ const Gamification = () => {
               </Badge>
             </div>
             <p className="text-sm opacity-90 mb-2">Progress to Level {userData.level + 1}</p>
-            <ProgressBar 
-              value={userData.currentXP} 
+            <ProgressBar
+              value={userData.currentXP}
               max={userData.nextLevelXP}
               variant="success"
               className="mb-2"
@@ -347,15 +388,14 @@ const Gamification = () => {
             {dailyChallenges.map((challenge) => {
               const Icon = challenge.icon;
               const progress = (challenge.progress / challenge.total) * 100;
-              
+
               return (
                 <div
                   key={challenge.id}
-                  className={`relative p-4 rounded-xl border-2 ${
-                    challenge.completed 
-                      ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500' 
-                      : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                  }`}
+                  className={`relative p-4 rounded-xl border-2 ${challenge.completed
+                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500'
+                    : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                    }`}
                 >
                   <div className="flex items-start gap-4">
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${challenge.color} flex items-center justify-center flex-shrink-0`}>
@@ -368,7 +408,7 @@ const Gamification = () => {
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                         {challenge.description}
                       </p>
-                      
+
                       {challenge.completed ? (
                         <button
                           onClick={() => claimChallenge(challenge)}
@@ -379,8 +419,8 @@ const Gamification = () => {
                         </button>
                       ) : (
                         <>
-                          <ProgressBar 
-                            value={challenge.progress} 
+                          <ProgressBar
+                            value={challenge.progress}
                             max={challenge.total}
                             size="sm"
                             className="mb-2"
@@ -397,7 +437,7 @@ const Gamification = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   {challenge.completed && (
                     <div className="absolute top-2 right-2">
                       <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
@@ -426,7 +466,7 @@ const Gamification = () => {
             {weeklyChallenges.map((challenge) => {
               const Icon = challenge.icon;
               const progress = (challenge.progress / challenge.total) * 100;
-              
+
               return (
                 <div
                   key={challenge.id}
@@ -458,8 +498,8 @@ const Gamification = () => {
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                         {challenge.description}
                       </p>
-                      <ProgressBar 
-                        value={challenge.progress} 
+                      <ProgressBar
+                        value={challenge.progress}
                         max={challenge.total}
                         showLabel
                         className="mb-2"
@@ -505,11 +545,10 @@ const Gamification = () => {
                   <button
                     onClick={() => handlePurchase(reward)}
                     disabled={reward.owned}
-                    className={`w-full py-2 rounded-lg font-medium transition-colors ${
-                      reward.owned
-                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white'
-                    }`}
+                    className={`w-full py-2 rounded-lg font-medium transition-colors ${reward.owned
+                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white'
+                      }`}
                   >
                     {reward.owned ? (
                       'Owned'
@@ -540,11 +579,10 @@ const Gamification = () => {
             {achievements.map((achievement) => (
               <div
                 key={achievement.id}
-                className={`p-4 rounded-xl text-center transition-all ${
-                  achievement.unlocked
-                    ? 'bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 border-2 border-yellow-400'
-                    : 'bg-gray-100 dark:bg-gray-800 opacity-60'
-                }`}
+                className={`p-4 rounded-xl text-center transition-all ${achievement.unlocked
+                  ? 'bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 border-2 border-yellow-400'
+                  : 'bg-gray-100 dark:bg-gray-800 opacity-60'
+                  }`}
               >
                 <div className="text-4xl mb-2">{achievement.icon}</div>
                 <p className="text-xs font-semibold text-gray-900 dark:text-white">

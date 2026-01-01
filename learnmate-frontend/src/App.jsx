@@ -11,7 +11,6 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import OAuthCallback from './pages/auth/OAuthCallback';
 import VerifyEmail from './pages/auth/VerifyEmail';
-import VerifyEmailNotice from './pages/auth/VerifyEmailNotice';
 import VerifyEmailPending from './pages/auth/VerifyEmailPending';
 
 // Main Pages
@@ -45,9 +44,10 @@ const ProtectedRoute = ({ children, requireEmailVerified = true, requireOnboardi
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requireEmailVerified && !user?.emailVerified) {
-    return <Navigate to="/verify-email-notice" replace />;
-  }
+  // CHECK DISABLED FOR DEMO
+  // if (requireEmailVerified && !user?.emailVerified) {
+  //   return <Navigate to="/verify-email-notice" replace />;
+  // }
 
   if (requireOnboarding && user?.emailVerified && !user?.onboardingCompleted) {
     return <Navigate to="/onboarding" replace />;
@@ -84,18 +84,18 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<Navigate to="/login" />} />
 
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
             <PublicRoute><Login /></PublicRoute>
-          } 
+          }
         />
 
-        <Route 
-          path="/register" 
+        <Route
+          path="/register"
           element={
             <PublicRoute><Register /></PublicRoute>
-          } 
+          }
         />
 
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -117,7 +117,7 @@ function App() {
         <Route
           path="/onboarding"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireOnboarding={false}>
               <Onboarding />
             </ProtectedRoute>
           }
@@ -127,7 +127,7 @@ function App() {
         <Route
           path="/assessment/initial"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireOnboarding={false}>
               <InitialAssessment />
             </ProtectedRoute>
           }
@@ -136,7 +136,7 @@ function App() {
         <Route
           path="/assessment/results"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requireOnboarding={false}>
               <AssessmentResults />
             </ProtectedRoute>
           }

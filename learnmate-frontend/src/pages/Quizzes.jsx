@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  BookOpen, 
-  Clock, 
-  Trophy, 
-  TrendingUp, 
+import {
+  BookOpen,
+  Clock,
+  Trophy,
+  TrendingUp,
   Search,
   Filter,
   Play,
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import Input from '../components/ui/input';
+import Input from '../components/ui/Input';
 
 const Quizzes = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -105,7 +105,7 @@ const Quizzes = () => {
 
   const filteredQuizzes = quizzes.filter(quiz => {
     const matchesSearch = quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         quiz.description.toLowerCase().includes(searchTerm.toLowerCase());
+      quiz.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || quiz.category === selectedCategory;
     const matchesDifficulty = selectedDifficulty === 'all' || quiz.difficulty === selectedDifficulty;
     return matchesSearch && matchesCategory && matchesDifficulty;

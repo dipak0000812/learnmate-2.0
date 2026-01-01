@@ -5,6 +5,10 @@ import logging
 from datetime import datetime
 import os
 import numpy as np
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 from models.quiz_evaluator import QuizEvaluator
 from models.roadmap_generator import RoadmapGenerator
@@ -159,7 +163,8 @@ def generate_roadmap():
             semester=data['semester'],
             interests=data.get('interests', []),
             target_career=data.get('targetCareer'),
-            time_available=data.get('timeAvailable', 15)
+            time_available=data.get('timeAvailable', 15),
+            known_skills=data.get('knownSkills', [])
         )
         
         logger.info(f"Roadmap generated for user {data['userId']}")
@@ -313,5 +318,5 @@ def internal_error(error):
     }), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))
     app.run(host='0.0.0.0', port=port, debug=False)

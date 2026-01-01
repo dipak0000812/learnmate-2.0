@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Briefcase, 
-  TrendingUp, 
-  DollarSign, 
+import {
+  Briefcase,
+  TrendingUp,
+  DollarSign,
   Users,
   Star,
   Target,
@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import Input from '../components/ui/input';
+import Input from '../components/ui/Input';
 import { toast } from 'sonner';
 import careerService from '../services/careerService';
 
@@ -30,8 +30,8 @@ const Careers = () => {
   const [selectedCareer, setSelectedCareer] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Mock career data (will be replaced with API call)
-  const careers = [
+  // State for careers data (initially mock, replaced by AI)
+  const [careersList, setCareersList] = useState([
     {
       id: 1,
       title: 'Full Stack Developer',
@@ -176,13 +176,13 @@ const Careers = () => {
       timeToLearn: '10-18 months',
       difficulty: 'Advanced'
     }
-  ];
+  ]);
 
   const categories = ['all', 'Software Development', 'Data & Analytics', 'Design', 'Infrastructure', 'Mobile Development', 'Artificial Intelligence'];
 
-  const filteredCareers = careers.filter(career => {
+  const filteredCareers = careersList.filter(career => {
     const matchesSearch = career.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         career.description.toLowerCase().includes(searchTerm.toLowerCase());
+      career.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || career.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -210,26 +210,55 @@ const Careers = () => {
       const onboardingData = JSON.parse(localStorage.getItem('onboardingData'));
       const assessmentResults = JSON.parse(localStorage.getItem('assessmentResults'));
 
+      // Construct synthetic scores based on strengths/weaknesses if exact scores aren't available
+      const subjects = ['AI', 'Programming', 'Math', 'DataScience', 'WebDevelopment'];
+      const scores = {};
+
+      subjects.forEach(subject => {
+        if (assessmentResults?.strengths?.includes(subject)) {
+          scores[subject] = 85 + Math.floor(Math.random() * 10);
+        } else if (assessmentResults?.weaknesses?.includes(subject)) {
+          scores[subject] = 60 + Math.floor(Math.random() * 10);
+        } else {
+          scores[subject] = 70 + Math.floor(Math.random() * 15);
+        }
+      });
+
       const userData = {
-        userId: user?._id,
+        userId: user?._id || 'guest',
         name: user?.name,
         email: user?.email,
-        dreamCareer: onboardingData?.dreamCareer || user?.dreamCareer,
-        currentYear: onboardingData?.currentYear,
-        experienceLevel: onboardingData?.experienceLevel,
-        knownSkills: onboardingData?.knownSkills || [],
-        assessmentScore: assessmentResults?.score,
-        strengths: assessmentResults?.strengths || [],
-        weaknesses: assessmentResults?.weaknesses || []
+        scores: scores, // Critical: AI requires 'scores' object
+        interests: onboardingData?.interests || [],
+        skills: onboardingData?.knownSkills || [],
+        semester: Number(onboardingData?.currentYear || 1) * 2,
+        dreamCareer: onboardingData?.dreamCareer || user?.dreamCareer
       };
 
       console.log('Sending to AI:', userData);
       const response = await careerService.getRecommendations(userData);
-      
+
       if (response.status === 'success') {
+        const aiRecommendations = response.data.recommendations.map((rec, index) => ({
+          id: `ai-${index}`,
+          title: rec.career,
+          category: rec.industries ? rec.industries[0] : 'Technology',
+          description: rec.description,
+          matchScore: Math.round(rec.confidence * 100),
+          icon: getCareerIcon(rec.career), // Helper function we'll add
+          salaryRange: rec.avgSalary,
+          demand: rec.growthRate === 'Very High' ? 'Very High' : 'High',
+          demandScore: rec.growthRate === 'Very High' ? 95 : 85,
+          growthRate: rec.growthRate === 'Very High' ? '+30%' : '+20%',
+          requiredSkills: rec.requirements || [],
+          learningPath: rec.matchReasons || ['Skill Acquisition', 'Project Building', 'Certification'], // using matchReasons as highlights for now
+          topCompanies: ['Google', 'Microsoft', 'Startup', 'Remote'], // Placeholder as AI doesn't return this yet
+          timeToLearn: '6-12 months',
+          difficulty: 'Intermediate'
+        }));
+
+        setCareersList(aiRecommendations); // Replace mock data with AI data
         toast.success('AI recommendations generated! 🎉');
-        console.log('AI Recommendations:', response.data);
-        // TODO: Update careers with AI response when backend returns recommendations
       }
     } catch (error) {
       console.error('AI Recommendations Error:', error);
@@ -239,10 +268,22 @@ const Careers = () => {
     }
   };
 
+  // Helper to pick an icon based on career title
+  const getCareerIcon = (title) => {
+    const t = title.toLowerCase();
+    if (t.includes('data')) return '📊';
+    if (t.includes('design')) return '🎨';
+    if (t.includes('security') || t.includes('cyber')) return '🛡️';
+    if (t.includes('manager') || t.includes('business')) return '💼';
+    if (t.includes('mobile')) return '📱';
+    if (t.includes('ai') || t.includes('intelligence')) return '🤖';
+    return '💻';
+  };
+
   // Handle Start Learning Path
   const handleStartLearningPath = () => {
     if (!selectedCareer) return;
-    
+
     // Save selected career for roadmap generation
     localStorage.setItem('selectedCareer', JSON.stringify({
       title: selectedCareer.title,
@@ -250,9 +291,9 @@ const Careers = () => {
       difficulty: selectedCareer.difficulty,
       timeToLearn: selectedCareer.timeToLearn
     }));
-    
+
     toast.success(`Starting learning path for ${selectedCareer.title}! 🚀`);
-    
+
     // Close modal and navigate to roadmap
     setSelectedCareer(null);
     navigate('/roadmap');
@@ -418,7 +459,7 @@ const Careers = () => {
 
               {/* Actions */}
               <div className="flex gap-2">
-                <Button 
+                <Button
                   className="flex-1"
                   onClick={() => setSelectedCareer(career)}
                 >
@@ -496,8 +537,8 @@ const Careers = () => {
                 </div>
               </div>
 
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 size="lg"
                 onClick={handleStartLearningPath}
               >

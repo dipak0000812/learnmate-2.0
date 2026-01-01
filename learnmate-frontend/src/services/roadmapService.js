@@ -6,20 +6,14 @@ const roadmapService = {
     try {
       // Only send assessmentId if it exists (backend validation fails on null)
       const payload = { dreamCareer };
-      
+
       if (assessmentId) {
         payload.assessmentId = assessmentId;
       }
 
-      console.log('🚀 Generating roadmap with payload:', payload);
-      
-      const response = await api.post('/api/roadmaps/generate', payload);
-      
-      console.log('✅ Roadmap generated successfully:', response.data);
-      
+      const response = await api.post('/roadmaps/generate', payload);
       return response.data;
     } catch (error) {
-      console.error('❌ Roadmap generation failed:', error.response?.data);
       throw error;
     }
   },
@@ -27,11 +21,9 @@ const roadmapService = {
   // Get roadmap by ID
   getRoadmapById: async (id) => {
     try {
-      console.log('📖 Fetching roadmap:', id);
-      const response = await api.get(`/api/roadmaps/${id}`);
+      const response = await api.get(`/roadmaps/${id}`);
       return response.data;
     } catch (error) {
-      console.error('❌ Error fetching roadmap:', error);
       throw error;
     }
   },
@@ -39,12 +31,9 @@ const roadmapService = {
   // Get user's roadmaps
   getUserRoadmaps: async (userId) => {
     try {
-      console.log('📚 Fetching roadmaps for user:', userId);
-      const response = await api.get(`/api/roadmaps/user/${userId}`);
-      console.log('✅ User roadmaps loaded:', response.data);
+      const response = await api.get(`/roadmaps/user/${userId}`);
       return response.data;
     } catch (error) {
-      console.error('❌ Error fetching user roadmaps:', error);
       throw error;
     }
   },
@@ -52,12 +41,9 @@ const roadmapService = {
   // Mark goal as complete
   completeGoal: async (roadmapId, goalId) => {
     try {
-      console.log('✓ Marking goal complete:', { roadmapId, goalId });
-      const response = await api.put(`/api/roadmaps/${roadmapId}/goals/${goalId}/complete`);
-      console.log('✅ Goal completed:', response.data);
+      const response = await api.put(`/roadmaps/${roadmapId}/goals/${goalId}/complete`);
       return response.data;
     } catch (error) {
-      console.error('❌ Error completing goal:', error);
       throw error;
     }
   }

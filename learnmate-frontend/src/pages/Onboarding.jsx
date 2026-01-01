@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import Input from '../components/ui/input';
+import Input from '../components/ui/Input';
 import Badge from '../components/ui/Badge';
 import { toast } from 'sonner';
 import onboardingService from '../services/onboardingService';
@@ -60,7 +60,7 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const totalSteps = 4;
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     interests: [],
@@ -72,28 +72,9 @@ const Onboarding = () => {
     timeline: ''
   });
 
+  // DEMO MODE: ALWAYS START FRESH
   useEffect(() => {
-    const loadProgress = async () => {
-      try {
-        const response = await onboardingService.getProgress();
-        const onboardingData = response.data?.data?.onboardingData || {};
-        setFormData((prev) => ({
-          ...prev,
-          interests: onboardingData.interests || [],
-          skillLevel: onboardingData.skillLevel || '',
-          targetRole: onboardingData.targetRole || '',
-          dreamCompanies: onboardingData.dreamCompanies || [],
-          knownSkills: onboardingData.knownSkills || [],
-          timeline: onboardingData.timeline || ''
-        }));
-      } catch (error) {
-        console.error('Failed to load onboarding progress', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProgress();
+    setLoading(false);
   }, []);
 
   const toggleSelection = (list, value) =>
@@ -254,11 +235,10 @@ const Onboarding = () => {
                       <button
                         key={interest}
                         onClick={() => handleInterestToggle(interest)}
-                        className={`px-4 py-2 rounded-full border-2 transition ${
-                          formData.interests.includes(interest)
-                            ? 'border-teal-600 bg-teal-50 text-teal-700'
-                            : 'border-gray-200 text-gray-700 hover:border-teal-300'
-                        }`}
+                        className={`px-4 py-2 rounded-full border-2 transition ${formData.interests.includes(interest)
+                          ? 'border-teal-600 bg-teal-50 text-teal-700'
+                          : 'border-gray-200 text-gray-700 hover:border-teal-300'
+                          }`}
                       >
                         {interest}
                       </button>
@@ -275,11 +255,10 @@ const Onboarding = () => {
                       <button
                         key={level.id}
                         onClick={() => setFormData((prev) => ({ ...prev, skillLevel: level.id }))}
-                        className={`p-4 rounded-xl border-2 transition ${
-                          formData.skillLevel === level.id
-                            ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20'
-                            : 'border-gray-200 hover:border-teal-300'
-                        }`}
+                        className={`p-4 rounded-xl border-2 transition ${formData.skillLevel === level.id
+                          ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20'
+                          : 'border-gray-200 hover:border-teal-300'
+                          }`}
                       >
                         <div className="text-3xl mb-2">{level.icon}</div>
                         <div className="font-semibold text-gray-900 dark:text-white">{level.label}</div>
@@ -310,11 +289,10 @@ const Onboarding = () => {
                     <button
                       key={career.id}
                       onClick={() => setFormData((prev) => ({ ...prev, targetRole: career.id }))}
-                      className={`relative p-5 rounded-xl border-2 text-left transition ${
-                        formData.targetRole === career.id
-                          ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 shadow-lg'
-                          : 'border-gray-200 hover:border-teal-300'
-                      }`}
+                      className={`relative p-5 rounded-xl border-2 text-left transition ${formData.targetRole === career.id
+                        ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 shadow-lg'
+                        : 'border-gray-200 hover:border-teal-300'
+                        }`}
                     >
                       <div className="flex items-start gap-3">
                         <span className="text-3xl">{career.icon}</span>
@@ -382,11 +360,10 @@ const Onboarding = () => {
                     <button
                       key={skill}
                       onClick={() => handleSkillToggle(skill)}
-                      className={`px-4 py-2 rounded-xl border-2 transition ${
-                        formData.knownSkills.includes(skill)
-                          ? 'border-teal-600 bg-teal-600 text-white'
-                          : 'border-gray-200 text-gray-700 hover:border-teal-300'
-                      }`}
+                      className={`px-4 py-2 rounded-xl border-2 transition ${formData.knownSkills.includes(skill)
+                        ? 'border-teal-600 bg-teal-600 text-white'
+                        : 'border-gray-200 text-gray-700 hover:border-teal-300'
+                        }`}
                     >
                       {skill}
                     </button>
@@ -414,11 +391,10 @@ const Onboarding = () => {
                     <button
                       key={option.id}
                       onClick={() => setFormData((prev) => ({ ...prev, timeline: option.id }))}
-                      className={`w-full p-5 rounded-xl border-2 text-left transition ${
-                        formData.timeline === option.id
-                          ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 shadow-lg'
-                          : 'border-gray-200 hover:border-teal-300'
-                      }`}
+                      className={`w-full p-5 rounded-xl border-2 text-left transition ${formData.timeline === option.id
+                        ? 'border-teal-600 bg-teal-50 dark:bg-teal-900/20 shadow-lg'
+                        : 'border-gray-200 hover:border-teal-300'
+                        }`}
                     >
                       <div className="flex items-center gap-4">
                         <span className="text-4xl">{option.icon}</span>

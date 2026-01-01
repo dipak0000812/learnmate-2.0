@@ -11,14 +11,15 @@ const transporter = nodemailer.createTransport({
 });
 
 // Test connection on startup
-transporter.verify((error) => {
-  if (error) {
-    console.error('❌ Email service configuration error:', error.message);
-    console.log('📧 Email features will not work. Please configure SMTP settings in .env');
-  } else {
-    console.log('✅ Email service is ready');
-  }
-});
+// Test connection on startup (DISABLED FOR DEMO)
+// transporter.verify((error) => {
+//   if (error) {
+//     console.error('❌ Email service configuration error:', error.message);
+//     console.log('📧 Email features will not work. Please configure SMTP settings in .env');
+//   } else {
+//     console.log('✅ Email service is ready');
+//   }
+// });
 
 const buildVerifyUrl = (verificationToken) =>
   `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle, AlertCircle, Mail } from 'lucide-react';
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/input';
+import Input from '../../components/ui/Input';
 import authService from '../../services/authService';
 import { toast } from 'sonner';
 
@@ -68,7 +68,7 @@ const VerifyEmail = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-teal-50 to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
       <div className="w-full max-w-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-gray-200/50 dark:border-gray-700/50">
-        
+
         <div className="flex flex-col items-center text-center space-y-4 mb-8">
           <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
             <Mail className="w-10 h-10 text-blue-600" />

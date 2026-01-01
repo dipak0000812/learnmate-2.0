@@ -16,10 +16,9 @@ import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import dashboardService from '../services/dashboardService';
-import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import PageTransition from '../components/ui/PageTransition';
 import { motion } from 'framer-motion';
 import {
   XAxis,
@@ -85,7 +84,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <PageTransition className="space-y-8">
+    <div className="space-y-8">
 
       {/* Hero Section */}
       <div className="relative rounded-3xl overflow-hidden bg-hero-gradient p-8 text-white shadow-premium">
@@ -112,12 +111,12 @@ const Dashboard = () => {
           </div>
 
           <div className="flex gap-4">
-            <Card glass className="bg-white/10 border-white/20 text-white p-4 min-w-[140px] text-center backdrop-blur-md">
+            <Card className="bg-white/10 border-white/20 text-white p-4 min-w-[140px] text-center backdrop-blur-md">
               <Trophy className="w-6 h-6 mx-auto mb-2 text-yellow-300" />
               <div className="text-2xl font-bold">{safeStats.points}</div>
               <div className="text-xs text-blue-100 uppercase tracking-wider">Total XP</div>
             </Card>
-            <Card glass className="bg-white/10 border-white/20 text-white p-4 min-w-[140px] text-center backdrop-blur-md">
+            <Card className="bg-white/10 border-white/20 text-white p-4 min-w-[140px] text-center backdrop-blur-md">
               <Zap className="w-6 h-6 mx-auto mb-2 text-orange-300" />
               <div className="text-2xl font-bold">{safeStats.level}</div>
               <div className="text-xs text-blue-100 uppercase tracking-wider">Level</div>
@@ -236,8 +235,8 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+              <div style={{ width: '100%', height: 300 }}>
+                <ResponsiveContainer>
                   <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
@@ -321,7 +320,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Quick Actions (Mock) */}
-          <Card gradient className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-0">
+          <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-0">
             <CardContent className="p-6">
               <h3 className="font-bold text-lg mb-2">Daily Challenge</h3>
               <p className="text-blue-100 text-sm mb-4">Complete a React quiz with &gt;80% score to earn 50 XP.</p>
@@ -337,7 +336,7 @@ const Dashboard = () => {
 
         </div>
       </div>
-    </PageTransition>
+    </div>
   );
 };
 
@@ -350,7 +349,7 @@ const StatsCard = ({ title, value, icon: Icon, trend, color = "blue" }) => {
   };
 
   return (
-    <Card hover={true}>
+    <Card className="hover:shadow-md transition-shadow cursor-pointer">
       <CardContent className="p-6 flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-1">{title}</p>

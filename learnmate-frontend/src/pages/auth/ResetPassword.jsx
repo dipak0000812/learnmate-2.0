@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, GraduationCap } from 'lucide-react';
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/input';
+import Input from '../../components/ui/Input';
 import authService from '../../services/authService';
 
 const resetPasswordSchema = z.object({
@@ -67,12 +67,12 @@ const ResetPassword = () => {
 
   const onSubmit = async (data) => {
     setLoading(true);
-    
+
     try {
       await authService.resetPassword(token, data.password);
 
       toast.success('Password reset successful! Please login with your new password.');
-      
+
       // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate('/login');

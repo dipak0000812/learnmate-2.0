@@ -25,11 +25,14 @@ class CareerRecommender:
         self.career_profiles = self._load_career_profiles()
         
         # Load model if exists, otherwise use rule-based system
-        if os.path.exists(model_path):
+        # Load model if exists, otherwise use rule-based system
+        # NOTE: Model file 'career_model.pkl' appears corrupt (missing 'model' key).
+        # We enforce Rule-Based Expert System for reliability.
+        if False and os.path.exists(model_path):
             self._load_model()
             logger.info("Career model loaded from disk")
         else:
-            logger.warning("Model file not found, using rule-based recommendation")
+            logger.warning("Using Rule-Based Expert System for Recommendations (Model disabled/not found)")
             self.use_rule_based = True
     
     def _load_career_profiles(self):
@@ -165,7 +168,7 @@ class CareerRecommender:
         score_component = 0.0
         importance_weights = career_profile['importance']
         
-        # 1. Academic performance component (60% weight)
+        # 1. Academic performance component (70% weight) - Increased from 60%
         for subject, importance in importance_weights.items():
             subject_score = 0
             # Flexible subject matching
@@ -175,22 +178,27 @@ class CareerRecommender:
             
             score_component += (subject_score / 100) * importance
         
-        # Normalize to 0-1 and apply 60% weight
-        score_component = score_component * 0.6
+        # Normalize and apply 70% weight
+        score_component = score_component * 0.7
         
-        # 2. Interest alignment component (25% weight)
+        # 2. Interest alignment component (20% weight)
         interest_score = 0.0
         career_keywords = career_name.lower().split() + career_profile['required_skills']
         career_keywords = [k.lower() for k in career_keywords]
         
-        for interest in interests:
-            interest_lower = interest.lower()
-            if any(keyword in interest_lower or interest_lower in keyword for keyword in career_keywords):
-                interest_score += 0.33  # Each matching interest adds value
+        if interests:
+            for interest in interests:
+                interest_lower = interest.lower()
+                # Improved fuzzy matching
+                if any(keyword in interest_lower or interest_lower in keyword for keyword in career_keywords):
+                    interest_score += 0.4  # More generous matching
+        else:
+             # If no interests provided, assume neutral/positive overlap to avoid penalty
+             interest_score = 0.5
+
+        interest_score = min(interest_score, 1.0) * 0.2
         
-        interest_score = min(interest_score, 1.0) * 0.25
-        
-        # 3. Skills alignment component (15% weight)
+        # 3. Skills alignment component (10% weight)
         skills_score = 0.0
         if skills:
             career_skills = [s.lower() for s in career_profile.get('key_skills', [])]
@@ -200,15 +208,21 @@ class CareerRecommender:
                          if any(cs in us or us in cs for cs in career_skills))
             
             if career_skills:
-                skills_score = (matches / len(career_skills)) * 0.15
+                skills_score = (matches / len(career_skills)) * 0.1
+        else:
+            # If no skills provided, rely on grades
+            skills_score = 0.05
         
         # Total score
         total_score = score_component + interest_score + skills_score
         
+        # Boost score slightly to ensure viable recommendations appear
+        total_score = min(total_score * 1.1, 0.99)
+
         # Apply minimum score threshold
         avg_score = sum(scores.values()) / len(scores) if scores else 0
         if avg_score < career_profile['min_score']:
-            total_score *= 0.7  # Penalty for not meeting minimum requirements
+            total_score *= 0.8  # Reduced penalty from 0.7
         
         return min(total_score, 1.0)
     

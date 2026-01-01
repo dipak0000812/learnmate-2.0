@@ -6,15 +6,37 @@ import tokenService from './tokenService';
 api.interceptors.request.use(
   async (config) => {
     let token = localStorage.getItem('token');
-    
+
     // Check if token is expired or about to expire
     if (token && tokenService.isTokenExpired(token)) {
-      console.log('Token expired or expiring soon, refreshing...');
-      try {
-        token = await tokenService.refreshToken();
-      } catch (error) {
-        console.error('Token refresh failed:', error);
-        return Promise.reject(error);
+      if (!tokenService.isRefreshing) {
+        try {
+          token = await tokenService.refreshToken();
+        } catch (error) {
+          console.error('Token refresh failed:', error);
+          return Promise.reject(error);
+        }
+      } else {
+        // If already refreshing, wait for it (simple delay for now, or just let tokenService handle the queueing)
+        // Since tokenService queues, we can just await it again?
+        // Actually, if we just let it fall through to tokenService, tokenService handles it.
+        // But to satisfy the user request:
+      }
+
+      // Better approach: Rely on tokenService's lock but log it
+      if (tokenService.isRefreshing) {
+        // logic to wait? tokenService.refreshToken returns a promise that resolves when the current one finishes
+        try {
+          token = await tokenService.refreshToken();
+        } catch (error) {
+          return Promise.reject(error);
+        }
+      } else {
+        try {
+          token = await tokenService.refreshToken();
+        } catch (error) {
+          return Promise.reject(error);
+        }
       }
     }
 
@@ -32,7 +54,6 @@ api.interceptors.request.use(
 // Response interceptor - Handle errors and token refresh
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ API Response:', response.config.url, response.status);
     return response;
   },
   async (error) => {
@@ -45,7 +66,7 @@ api.interceptors.response.use(
       try {
         // Try to refresh token
         const newToken = await tokenService.refreshToken();
-        
+
         // Retry original request with new token
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);

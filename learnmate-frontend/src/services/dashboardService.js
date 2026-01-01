@@ -1,10 +1,10 @@
-import api from './axiosInstance';
+import api from './api';
 
 const dashboardService = {
   // Get user's gamification stats (points, level, streak, badges)
   getGamificationStats: async () => {
     try {
-      const response = await api.get('/api/gamification/me');
+      const response = await api.get('/gamification/me');
       return response.data;
     } catch (error) {
       console.error('Failed to fetch gamification stats:', error);
@@ -15,7 +15,7 @@ const dashboardService = {
   // Get user's personalized roadmap
   getMyRoadmap: async () => {
     try {
-      const response = await api.get('/api/roadmaps/my-roadmap');
+      const response = await api.get('/roadmaps/my-roadmap');
       return response.data;
     } catch (error) {
       // 404 is expected if user hasn't completed onboarding
@@ -30,7 +30,7 @@ const dashboardService = {
   // Get assessment history
   getAssessmentHistory: async (limit = 5) => {
     try {
-      const response = await api.get(`/api/assessments/history?limit=${limit}`);
+      const response = await api.get(`/assessments/history?limit=${limit}`);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch assessment history:', error);
@@ -41,7 +41,7 @@ const dashboardService = {
   // Get leaderboard
   getLeaderboard: async (limit = 10) => {
     try {
-      const response = await api.get(`/api/gamification/leaderboard?limit=${limit}`);
+      const response = await api.get(`/gamification/leaderboard?limit=${limit}`);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch leaderboard:', error);

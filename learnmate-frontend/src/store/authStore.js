@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import api from '../services/api';
 import tokenService from '../services/tokenService';
 
-const useAuthStore = create((set) => ({
+const useAuthStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem('user')) || null,
   token: localStorage.getItem('token') || null,
   isAuthenticated: !!localStorage.getItem('token'),
@@ -13,7 +13,7 @@ const useAuthStore = create((set) => ({
   login: async (email, password) => {
     set({ loading: true, error: null });
     try {
-      const response = await api.post('/api/auth/login', { email, password });
+      const response = await api.post('/auth/login', { email, password });
       const { token, user } = response.data.data;
 
       // Store access token
@@ -26,8 +26,15 @@ const useAuthStore = create((set) => ({
       set({ user, token, isAuthenticated: true, loading: false });
       return { success: true };
     } catch (error) {
-      console.error('❌ Login error:', error.response?.data);
-      const errorMsg = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      console.error('❌ Login error:', error);
+      let errorMsg = 'Login failed. Please check your credentials.';
+
+      if (error.code === 'ERR_NETWORK') {
+        errorMsg = 'Cannot connect to server. Please ensure the Backend is running on Port 5000.';
+      } else if (error.response?.data?.message) {
+        errorMsg = error.response.data.message;
+      }
+
       set({ error: errorMsg, loading: false });
       return { success: false, error: errorMsg };
     }
@@ -36,7 +43,7 @@ const useAuthStore = create((set) => ({
   register: async (userData) => {
     set({ loading: true, error: null });
     try {
-      const response = await api.post('/api/auth/register', userData);
+      const response = await api.post('/auth/register', userData);
       const { token, user } = response.data.data;
 
       // Store token
@@ -58,7 +65,7 @@ const useAuthStore = create((set) => ({
 
   logout: async () => {
     try {
-      await api.post('/api/auth/logout');
+      await api.post('/auth/logout');
     } catch (err) {
       // ignore logout errors
     }
@@ -66,9 +73,26 @@ const useAuthStore = create((set) => ({
     set({ user: null, token: null, isAuthenticated: false });
   },
 
-  updateUser: (userData) => {
-    localStorage.setItem('user', JSON.stringify(userData));
-    set({ user: userData });
+  updateUser: async (userData) => {
+    try {
+      // Optimistic update
+      set({ user: { ...get().user, ...userData } });
+      localStorage.setItem('user', JSON.stringify({ ...get().user, ...userData }));
+
+      // Persist to backend
+      const response = await api.put('/users/me', userData);
+
+      // Update with server response (in case of sanitization)
+      const updatedUser = response.data.data;
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      set({ user: updatedUser });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Update profile failed:', error);
+      // Revert? For now just return error
+      return { success: false, error: error.response?.data?.message || 'Update failed' };
+    }
   },
 
   // Manual token refresh (if needed)
@@ -85,7 +109,7 @@ const useAuthStore = create((set) => ({
   // Fetch fresh user data (for real-time stats updates)
   fetchUser: async () => {
     try {
-      const response = await api.get('/api/auth/me'); // Assuming /me endpoint exists or similar
+      const response = await api.get('/auth/me'); // Assuming /me endpoint exists or similar
       const user = response.data.data;
       localStorage.setItem('user', JSON.stringify(user));
       set({ user });

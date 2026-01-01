@@ -288,7 +288,7 @@ class RoadmapGenerator:
         return len(missing_prereqs) == 0, missing_prereqs
     
     def generate(self, user_id, performance, semester, interests=None, 
-                 target_career=None, time_available=15):
+                 target_career=None, time_available=15, known_skills=None):
         """
         Generate personalized learning roadmap
         
@@ -322,6 +322,12 @@ class RoadmapGenerator:
                     'priorityLabel': self._get_priority_label(priority_score),
                     'level': self._determine_skill_level(score)
                 })
+            
+            # Sort by priority (highest first)
+            subject_priorities.sort(key=lambda x: x['priority'], reverse=True)
+            
+            # Normalize known skills for comparison
+            normalized_known_skills = set(s.lower().strip() for s in (known_skills or []))
             
             # Sort by priority (highest first)
             subject_priorities.sort(key=lambda x: x['priority'], reverse=True)
@@ -390,6 +396,16 @@ class RoadmapGenerator:
                         "resources": ["Online courses", "Textbooks", "Practice platforms"]
                     })
             
+            # Filter out known skills
+            if known_skills:
+                normalized_known = set(str(s).lower().strip() for s in known_skills)
+                roadmap = [
+                    item for item in roadmap 
+                    if not (item['subject'].lower() in normalized_known or 
+                           any(s in item['milestone'].lower() for s in normalized_known))
+                ]
+                logger.info(f"Filtered roadmap size after skills check: {len(roadmap)}")
+
             # Estimate completion times
             self._estimate_completion_time(roadmap, time_available)
             

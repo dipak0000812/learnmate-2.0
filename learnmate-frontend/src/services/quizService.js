@@ -5,7 +5,7 @@ const quizService = {
   getAllQuizzes: async (filters = {}) => {
     try {
       const params = new URLSearchParams(filters);
-      const response = await api.get(`/api/questions?${params}`);
+      const response = await api.get(`/questions?${params}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -15,7 +15,7 @@ const quizService = {
   // Get quiz by ID
   getQuizById: async (id) => {
     try {
-      const response = await api.get(`/api/questions/${id}`);
+      const response = await api.get(`/questions/${id}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -25,7 +25,7 @@ const quizService = {
   // Submit quiz answers
   submitQuiz: async (answers, timeTaken) => {
     try {
-      const response = await api.post('/api/assessments/submit', {
+      const response = await api.post('/assessments/submit', {
         answers,
         timeTaken
       });
@@ -38,7 +38,7 @@ const quizService = {
   // Get quiz results
   getQuizResults: async (assessmentId) => {
     try {
-      const response = await api.get(`/api/assessments/${assessmentId}`);
+      const response = await api.get(`/assessments/${assessmentId}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -48,7 +48,7 @@ const quizService = {
   // Get user's quiz history
   getQuizHistory: async () => {
     try {
-      const response = await api.get('/api/assessments/history');
+      const response = await api.get('/assessments/history');
       return response.data;
     } catch (error) {
       throw error;

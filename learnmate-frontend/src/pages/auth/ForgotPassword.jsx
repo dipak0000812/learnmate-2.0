@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { Mail, ArrowLeft, CheckCircle, Send, GraduationCap } from 'lucide-react';
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/input';
+import Input from '../../components/ui/Input';
 import authService from '../../services/authService';
 
 const forgotPasswordSchema = z.object({
@@ -29,7 +29,7 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data) => {
     setLoading(true);
-    
+
     try {
       const response = await authService.requestPasswordReset(data.email);
 

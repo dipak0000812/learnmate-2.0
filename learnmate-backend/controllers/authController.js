@@ -101,16 +101,16 @@ exports.register = async (req, res, next) => {
             branch: branch || '',
             emailVerificationToken: verificationToken,
             emailVerificationExpires: verificationExpires,
+            emailVerificationExpires: verificationExpires,
             emailVerified: false,
             onboardingCompleted: false
         });
-
-        let emailSent = false;
+        // Send verification email (Non-blocking)
         try {
             await emailService.sendVerificationEmail(user.email, verificationToken, user.name);
-            emailSent = true;
         } catch (emailError) {
-            console.error('Failed to send verification email:', emailError.message);
+            console.warn('⚠️ Verification email failed (check SMTP config):', emailError.message);
+            // Don't block registration if email service is down/unconfigured
         }
 
         const token = createAccessToken(user._id);
@@ -119,13 +119,10 @@ exports.register = async (req, res, next) => {
 
         res.status(201).json({
             status: 'success',
-            message: emailSent
-                ? 'Registration successful! Please check your email to verify your account.'
-                : 'Registration successful! Email verification pending (check SMTP configuration).',
+            message: 'Registration successful!',
             data: {
                 token,
-                user: buildUserResponse(user),
-                emailSent
+                user: buildUserResponse(user)
             }
         });
     } catch (err) {
@@ -146,12 +143,12 @@ exports.login = async (req, res, next) => {
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
 
         sendAuthResponse(res, user);

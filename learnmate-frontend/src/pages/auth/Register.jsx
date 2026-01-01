@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { UserPlus, Mail, Lock, User, Eye, EyeOff, GraduationCap, Sparkles } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/input';
+import Input from '../../components/ui/Input';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -40,14 +40,10 @@ const Register = () => {
 
     if (result.success) {
       // Store email for verification reminder
-      localStorage.setItem('pendingVerificationEmail', userData.email);
+      toast.success('Registration successful! Welcome aboard. 🚀');
 
-      toast.success('Account created! Please verify your email. 📧');
-
-      // Redirect to verification notice page
-      navigate('/verify-email-notice', {
-        state: { email: userData.email },
-      });
+      // Redirect to onboarding (Email verification is disabled for demo)
+      navigate('/onboarding');
     } else {
       toast.error(result.error || 'Registration failed');
     }
@@ -55,7 +51,7 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-teal-50 to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 relative overflow-hidden">
-      
+
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-float"></div>
@@ -90,7 +86,7 @@ const Register = () => {
           </h2>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            
+
             {/* Name */}
             <div className="group">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
@@ -199,9 +195,9 @@ const Register = () => {
 
         <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
           By signing up, you agree to our{' '}
-          <a href="#" className="text-teal-600 hover:underline">Terms of Service</a>{' '}
+          <button type="button" className="text-teal-600 hover:underline">Terms of Service</button>{' '}
           and{' '}
-          <a href="#" className="text-teal-600 hover:underline">Privacy Policy</a>
+          <button type="button" className="text-teal-600 hover:underline">Privacy Policy</button>
         </p>
       </div>
     </div>

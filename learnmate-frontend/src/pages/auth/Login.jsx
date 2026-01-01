@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { LogIn, Mail, Lock, Eye, EyeOff, GraduationCap, Sparkles } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/input';
+import Input from '../../components/ui/Input';
 import oauthService from '../../services/oauthService';
 
 const loginSchema = z.object({
@@ -31,7 +31,7 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     const result = await login(data.email, data.password);
-    
+
     if (result.success) {
       toast.success('Welcome back! 🎉');
       navigate('/dashboard');
@@ -42,44 +42,12 @@ const Login = () => {
 
   // Google OAuth Handler
   const handleGoogleLogin = async () => {
-    setOauthLoading('google');
-    try {
-      const result = await oauthService.loginWithGoogle();
-      
-      // Save token and user data
-      localStorage.setItem('token', result.token);
-      localStorage.setItem('user', JSON.stringify(result.user));
-      
-      toast.success('Signed in with Google! 🎉');
-      navigate('/dashboard');
-    } catch (error) {
-      if (error.message !== 'Authentication cancelled') {
-        toast.error('Google sign-in failed. Please try again.');
-      }
-    } finally {
-      setOauthLoading(null);
-    }
+    toast.info('Google Sign-In is coming soon!');
   };
 
   // GitHub OAuth Handler
   const handleGitHubLogin = async () => {
-    setOauthLoading('github');
-    try {
-      const result = await oauthService.loginWithGitHub();
-      
-      // Save token and user data
-      localStorage.setItem('token', result.token);
-      localStorage.setItem('user', JSON.stringify(result.user));
-      
-      toast.success('Signed in with GitHub! 🎉');
-      navigate('/dashboard');
-    } catch (error) {
-      if (error.message !== 'Authentication cancelled') {
-        toast.error('GitHub sign-in failed. Please try again.');
-      }
-    } finally {
-      setOauthLoading(null);
-    }
+    toast.info('GitHub Sign-In is coming soon!');
   };
 
   return (

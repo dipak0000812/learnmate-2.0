@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import Input from '../components/ui/input';
+import Input from '../components/ui/Input';
 import { toast } from 'sonner';
 
 const Settings = () => {
@@ -148,14 +148,12 @@ const Settings = () => {
             </div>
             <button
               onClick={toggleDarkMode}
-              className={`relative w-14 h-7 rounded-full transition-colors ${
-                darkMode ? 'bg-blue-600' : 'bg-gray-300'
-              }`}
+              className={`relative w-14 h-7 rounded-full transition-colors ${darkMode ? 'bg-blue-600' : 'bg-gray-300'
+                }`}
             >
               <div
-                className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                  darkMode ? 'translate-x-7' : 'translate-x-0'
-                }`}
+                className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${darkMode ? 'translate-x-7' : 'translate-x-0'
+                  }`}
               />
             </button>
           </div>
@@ -237,14 +235,12 @@ const Settings = () => {
                     [key]: !notifications[key]
                   })
                 }
-                className={`relative w-14 h-7 rounded-full transition-colors ${
-                  notifications[key] ? 'bg-blue-600' : 'bg-gray-300'
-                }`}
+                className={`relative w-14 h-7 rounded-full transition-colors ${notifications[key] ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
               >
                 <div
-                  className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                    notifications[key] ? 'translate-x-7' : 'translate-x-0'
-                  }`}
+                  className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${notifications[key] ? 'translate-x-7' : 'translate-x-0'
+                    }`}
                 />
               </button>
             </div>
@@ -299,14 +295,12 @@ const Settings = () => {
                     [key]: !privacy[key]
                   })
                 }
-                className={`relative w-14 h-7 rounded-full transition-colors ${
-                  privacy[key] ? 'bg-blue-600' : 'bg-gray-300'
-                }`}
+                className={`relative w-14 h-7 rounded-full transition-colors ${privacy[key] ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
               >
                 <div
-                  className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                    privacy[key] ? 'translate-x-7' : 'translate-x-0'
-                  }`}
+                  className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${privacy[key] ? 'translate-x-7' : 'translate-x-0'
+                    }`}
                 />
               </button>
             </div>

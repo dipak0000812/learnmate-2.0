@@ -58,7 +58,7 @@ exports.generate = async (req, res, next) => {
 
     try {
       console.log(`[RoadmapController] Requesting roadmap from AI: ${AI_SERVICE_URL}/ai/generate-roadmap`);
-      const aiResponse = await axios.post(`${AI_SERVICE_URL}/ai/generate-roadmap`, aiPayload);
+      const aiResponse = await axios.post(`${AI_SERVICE_URL}/ai/generate-roadmap`, aiPayload, { timeout: 15000 });
 
       if (aiResponse.data.status === 'success') {
         roadmapData = aiResponse.data.data.roadmap;

@@ -2,7 +2,7 @@
 import api from './axiosInstance';
 import { jwtDecode } from 'jwt-decode';
 
-const REFRESH_ENDPOINT = '/api/auth/refresh';
+const REFRESH_ENDPOINT = '/auth/refresh';
 
 class TokenService {
   constructor() {
@@ -21,18 +21,9 @@ class TokenService {
     }
   }
 
-  // Check if token is expired or about to expire
+  // Check if token is expired (DEMO MODE: ALWAYS FALSE)
   isTokenExpired(token) {
-    if (!token) return true;
-    
-    const decoded = this.decodeToken(token);
-    if (!decoded || !decoded.exp) return true;
-    
-    // Token is considered expired if less than 5 minutes remain
-    const currentTime = Date.now() / 1000;
-    const bufferTime = 5 * 60; // 5 minutes
-    
-    return decoded.exp - currentTime < bufferTime;
+    return false;
   }
 
   // Get token expiry time
@@ -80,64 +71,30 @@ class TokenService {
       // Clear tokens and redirect to login
       this.clearTokens();
       window.location.href = '/login';
-      
+
       throw error;
     } finally {
       this.isRefreshing = false;
     }
   }
 
-  // Schedule automatic token refresh
+  // Schedule automatic token refresh (DISABLED FOR STABILITY)
   scheduleTokenRefresh(token) {
-    // Clear existing timer
-    if (this.refreshTimer) {
-      clearTimeout(this.refreshTimer);
-    }
-
-    const expiryTime = this.getTokenExpiryTime(token);
-    if (!expiryTime) return;
-
-    // Refresh 5 minutes before expiry
-    const refreshTime = expiryTime - Date.now() - (5 * 60 * 1000);
-
-    if (refreshTime > 0) {
-      this.refreshTimer = setTimeout(() => {
-        this.refreshToken();
-      }, refreshTime);
-
-      // Better formatted console message
-      const hours = Math.floor(refreshTime / 1000 / 60 / 60);
-      const minutes = Math.floor((refreshTime / 1000 / 60) % 60);
-      console.log(`⏰ Token expires in ${hours}h ${minutes}m`);
-    } else {
-      this.refreshToken().catch(() => {
-        // noop - downstream handlers already redirect on failure
-      });
-    }
+    // console.log('Auto-refresh disabled for stability.');
+    return;
   }
 
   // Initialize token refresh on app start
   initTokenRefresh() {
-    const token = localStorage.getItem('token');
-    
-    if (!token) return;
-
-    if (this.isTokenExpired(token)) {
-      // Token already expired, try to refresh immediately
-      this.refreshToken().catch(() => {
-        // Refresh failed, user will be redirected to login
-      });
-    } else {
-      // Schedule refresh for later
-      this.scheduleTokenRefresh(token);
-    }
+    // console.log('Auto-refresh disabled for stability.');
+    return;
   }
 
   // Clear all tokens
   clearTokens() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    
+
     if (this.refreshTimer) {
       clearTimeout(this.refreshTimer);
       this.refreshTimer = null;

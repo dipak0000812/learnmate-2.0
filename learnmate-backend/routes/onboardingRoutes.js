@@ -114,6 +114,7 @@ router.post('/complete', auth, async (req, res) => {
       targetRole: user.onboardingData.targetRole || 'Developer',
       dreamCompanies: user.onboardingData.dreamCompanies || [],
       timeline: user.onboardingData.timeline || '6-months',
+      knownSkills: user.onboardingData.knownSkills || [],
       assessmentScore: user.onboardingData.assessmentScore || 0,
       assessmentResults: user.onboardingData.assessmentResults || {}
     };
@@ -123,7 +124,7 @@ router.post('/complete', auth, async (req, res) => {
 
     try {
       const aiResponse = await axios.post(
-        `${aiServiceUrl.replace(/\/$/, '')}/generate-roadmap`,
+        `${aiServiceUrl.replace(/\/$/, '')}/ai/generate-roadmap`,
         roadmapRequest,
         { timeout: 30000 }
       );

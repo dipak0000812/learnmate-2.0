@@ -40,6 +40,29 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
+  // Login with existing token (OAuth)
+  loginWithToken: async (token) => {
+    set({ loading: true, error: null });
+    try {
+      localStorage.setItem('token', token);
+      // Fetch user data with this token
+      const user = await get().fetchUser();
+
+      if (user) {
+        tokenService.scheduleTokenRefresh(token);
+        set({ token, isAuthenticated: true, loading: false });
+        return { success: true };
+      } else {
+        throw new Error('Failed to fetch user profile');
+      }
+    } catch (error) {
+      console.error('OAuth Hydration error:', error);
+      set({ error: 'OAuth failed', loading: false, token: null, isAuthenticated: false });
+      localStorage.removeItem('token');
+      return { success: false, error: 'Authentication failed' };
+    }
+  },
+
   register: async (userData) => {
     set({ loading: true, error: null });
     try {

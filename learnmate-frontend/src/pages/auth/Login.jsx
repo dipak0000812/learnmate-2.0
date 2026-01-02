@@ -41,13 +41,13 @@ const Login = () => {
   };
 
   // Google OAuth Handler
-  const handleGoogleLogin = async () => {
-    toast.info('Google Sign-In is coming soon!');
+  const handleGoogleLogin = () => {
+    window.location.href = 'http://localhost:5000/api/auth/google';
   };
 
   // GitHub OAuth Handler
-  const handleGitHubLogin = async () => {
-    toast.info('GitHub Sign-In is coming soon!');
+  const handleGitHubLogin = () => {
+    window.location.href = 'http://localhost:5000/api/auth/github';
   };
 
   return (

@@ -19,8 +19,7 @@ const assessmentRoutes = require('./routes/assessmentRoutes');
 const roadmapRoutes = require('./routes/roadmapRoutes');
 const onboardingRoutes = require('./routes/onboardingRoutes');
 
-// Hardcoded to ensure IPv4 reliability
-const AI_SERVICE_URL = 'http://127.0.0.1:5001';
+// AI Service URL is now handled via process.env.AI_SERVICE_URL
 
 const app = express();
 
@@ -31,26 +30,38 @@ connectDB();
 // 1. CORS MUST be first to handle preflight requests for all routes, including proxy
 app.use(cors(corsConfig));
 
+// Initialize Passport
+require('./config/passport');
+app.use(require('passport').initialize());
+
 // 2. Helmet for security headers
 app.use(helmet());
 
 // 3. AI proxy (Must be BEFORE body parser to stream request body, but AFTER CORS)
-if (AI_SERVICE_URL) {
+// 3. AI proxy (Must be BEFORE body parser to stream request body, but AFTER CORS)
+if (process.env.AI_SERVICE_URL) {
+  const AI_URL = process.env.AI_SERVICE_URL;
+  const AI_KEY = process.env.AI_API_KEY;
+
+  console.log(`🤖 AI Service Proxy Configured -> ${AI_URL}`);
+
   app.use(
     '/api/ai',
     createProxyMiddleware({
-      target: AI_SERVICE_URL,
+      target: AI_URL,
       changeOrigin: true,
-      pathRewrite: { '^/': '/ai/' }, // Rewrites /recommend-career -> /ai/recommend-career
+      pathRewrite: { '^/api/ai': '/ai' }, // Correct rewrite: /api/ai/generate -> /ai/generate
       secure: false,
       proxyTimeout: Number(process.env.AI_SERVICE_TIMEOUT || 15000),
       on: {
+        proxyReq: (proxyReq, req, res) => {
+          // Inject Secret Key
+          if (AI_KEY) {
+            proxyReq.setHeader('X-API-Key', AI_KEY);
+          }
+        },
         error: (err, req, res) => {
           console.error('Proxy Error:', err);
-          // Ensure CORS headers are present even on error
-          // (Though cors middleware above should handle it, explicit header doesn't hurt)
-          res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-          res.header("Access-Control-Allow-Credentials", "true");
           res.status(502).json({ status: 'fail', message: 'AI Service Unavailable' });
         }
       }

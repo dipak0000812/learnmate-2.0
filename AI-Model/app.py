@@ -35,6 +35,7 @@ app.json_provider_class = NumpyJSONProvider
 app.json = app.json_provider_class(app)
 CORS(app)
 
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -45,6 +46,27 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# Security Middleware
+@app.before_request
+def require_api_key():
+    # Allow health check without key
+    if request.endpoint == 'health_check':
+        return
+    
+    api_key = os.getenv('AI_API_KEY')
+    if not api_key:
+        logger.warning("AI_API_KEY not set in environment - allowing request (INSECURE)")
+        return
+
+    auth_header = request.headers.get('X-API-Key')
+    if not auth_header or auth_header != api_key:
+        logger.warning(f"Unauthorized access attempt from {request.remote_addr}")
+        return jsonify({
+            "status": "fail",
+            "message": "Unauthorized"
+        }), 401
+
 
 # ... rest of your app.py code continues here
 

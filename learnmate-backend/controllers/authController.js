@@ -282,18 +282,52 @@ exports.verifyEmail = async (req, res, next) => {
     }
 };
 
-exports.googleAuth = (req, res) => {
-    res.status(501).json({ status: 'fail', message: 'Google OAuth is not configured yet.' });
+exports.googleAuth = require('passport').authenticate('google', { session: false, scope: ['profile', 'email'] });
+
+exports.googleCallback = (req, res, next) => {
+    require('passport').authenticate('google', { session: false }, (err, user, info) => {
+        if (err || !user) {
+            return res.redirect('http://localhost:3000/login?error=oauth_failed');
+        }
+        // Generate tokens manually as we do in login
+        // We need to access the response functions we defined earlier or duplicate logic
+        // Duplicating logic here for clarity as sendAuthResponse relies on 'res' object of API
+        try {
+            const token = createAccessToken(user._id);
+            const refreshToken = createRefreshToken(user._id);
+            setRefreshCookie(res, refreshToken);
+
+            // Redirect to frontend with token in query param? 
+            // Or Render a temporary page that posts message to opener?
+            // Standard approach for SPA: Redirect to a handler page with token
+
+            // SECURITY NOTE: Passing token in URL has risks but is standard for OAuth -> SPA transitions 
+            // if short lived. Better: Redirect to a 'processing' page which hits an endpoint to get the token via cookie?
+            // Let's go with the query param approach but only for the Access Token (short lived).
+            // The Refresh token is already in the httpOnly Cookie set above!
+
+            res.redirect(`http://localhost:3000/oauth/callback?token=${token}`);
+
+        } catch (error) {
+            next(error);
+        }
+    })(req, res, next);
 };
 
-exports.googleCallback = (req, res) => {
-    res.status(501).json({ status: 'fail', message: 'Google OAuth callback is not configured yet.' });
-};
+exports.githubAuth = require('passport').authenticate('github', { session: false, scope: ['user:email'] });
 
-exports.githubAuth = (req, res) => {
-    res.status(501).json({ status: 'fail', message: 'GitHub OAuth is not configured yet.' });
-};
-
-exports.githubCallback = (req, res) => {
-    res.status(501).json({ status: 'fail', message: 'GitHub OAuth callback is not configured yet.' });
+exports.githubCallback = (req, res, next) => {
+    require('passport').authenticate('github', { session: false }, (err, user, info) => {
+        if (err || !user) {
+            return res.redirect('http://localhost:3000/login?error=oauth_failed');
+        }
+        try {
+            const token = createAccessToken(user._id);
+            const refreshToken = createRefreshToken(user._id);
+            setRefreshCookie(res, refreshToken);
+            res.redirect(`http://localhost:3000/oauth/callback?token=${token}`);
+        } catch (error) {
+            next(error);
+        }
+    })(req, res, next);
 };

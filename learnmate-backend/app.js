@@ -50,18 +50,21 @@ if (process.env.AI_SERVICE_URL) {
     createProxyMiddleware({
       target: AI_URL,
       changeOrigin: true,
-      pathRewrite: { '^/api/ai': '/ai' }, // Correct rewrite: /api/ai/generate -> /ai/generate
+      pathRewrite: { '^/': '/ai/' },
       secure: false,
       proxyTimeout: Number(process.env.AI_SERVICE_TIMEOUT || 15000),
       on: {
         proxyReq: (proxyReq, req, res) => {
-          // Inject Secret Key
+          console.log(`[Proxy] Proxying ${req.method} ${req.url} -> ${AI_URL}${proxyReq.path}`);
           if (AI_KEY) {
+            console.log('[Proxy] Injecting X-API-Key header');
             proxyReq.setHeader('X-API-Key', AI_KEY);
+          } else {
+            console.warn('[Proxy] WARNING: No AI_API_KEY found in environment!');
           }
         },
         error: (err, req, res) => {
-          console.error('Proxy Error:', err);
+          console.error('[Proxy] Connection Error:', err.message);
           res.status(502).json({ status: 'fail', message: 'AI Service Unavailable' });
         }
       }

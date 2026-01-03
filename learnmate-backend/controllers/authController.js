@@ -306,7 +306,8 @@ exports.googleCallback = (req, res, next) => {
             // Let's go with the query param approach but only for the Access Token (short lived).
             // The Refresh token is already in the httpOnly Cookie set above!
 
-            res.redirect(`http://localhost:3000/oauth/callback?token=${token}`);
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            res.redirect(`${frontendUrl}/oauth/callback?token=${token}`);
 
         } catch (error) {
             next(error);
@@ -325,7 +326,8 @@ exports.githubCallback = (req, res, next) => {
             const token = createAccessToken(user._id);
             const refreshToken = createRefreshToken(user._id);
             setRefreshCookie(res, refreshToken);
-            res.redirect(`http://localhost:3000/oauth/callback?token=${token}`);
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            res.redirect(`${frontendUrl}/oauth/callback?token=${token}`);
         } catch (error) {
             next(error);
         }

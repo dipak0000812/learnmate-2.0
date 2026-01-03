@@ -44,13 +44,26 @@ exports.generate = async (req, res, next) => {
       performance = { "General": assessment.total > 0 ? (assessment.score / assessment.total) * 100 : 50 };
     }
 
+    // usage:
+    // 3-months = intensive (20h/week)
+    // 6-months = balanced (10h/week)
+    // 1-year = steady (5h/week)
+    const timeMap = { '3-months': 20, '6-months': 10, '1-year': 5 };
+
+    // Use onboarding data or profile data if available
+    const userInterests = user.onboardingData?.interests?.length > 0 ? user.onboardingData.interests : (user.interests || [dreamCareer]);
+    const userSkills = user.onboardingData?.knownSkills?.length > 0 ? user.onboardingData.knownSkills : (user.skills || []);
+    const userTimeline = user.onboardingData?.timeline || '6-months';
+
     const aiPayload = {
       userId: user._id.toString(),
       performance: performance,
-      semester: user.semester || 1, // field might need to be added to User model, default 1
-      interests: [dreamCareer], // simple interest inference
+      semester: user.semester || 1,
+      interests: userInterests,
       targetCareer: dreamCareer,
-      timeAvailable: 15 // default
+      timeAvailable: timeMap[userTimeline] || 15,
+      knownSkills: userSkills,
+      goal: `Generate a roadmap to become a ${dreamCareer}`
     };
 
     let roadmapData;

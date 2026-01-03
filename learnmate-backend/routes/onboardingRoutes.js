@@ -106,17 +106,24 @@ router.post('/complete', auth, async (req, res) => {
       });
     }
 
+    // usage:
+    // 3-months = intensive (20h/week)
+    // 6-months = balanced (10h/week)
+    // 1-year = steady (5h/week)
+    const timeMap = { '3-months': 20, '6-months': 10, '1-year': 5 };
+
     const roadmapRequest = {
       userId: user._id.toString(),
       userName: user.name,
       interests: user.onboardingData.interests || [],
-      skillLevel: user.onboardingData.skillLevel || 'beginner',
-      targetRole: user.onboardingData.targetRole || 'Developer',
-      dreamCompanies: user.onboardingData.dreamCompanies || [],
-      timeline: user.onboardingData.timeline || '6-months',
+      semester: user.semester || 1,
+      // Map targetRole to targetCareer for consistency
+      targetCareer: user.onboardingData.targetRole || 'Developer',
+      // Convert timeline string to hours/week integer for AI
+      timeAvailable: timeMap[user.onboardingData.timeline] || 10,
       knownSkills: user.onboardingData.knownSkills || [],
-      assessmentScore: user.onboardingData.assessmentScore || 0,
-      assessmentResults: user.onboardingData.assessmentResults || {}
+      // Structure performance data for AI analysis
+      performance: user.onboardingData.assessmentResults || { "General Assessment": user.onboardingData.assessmentScore || 50 }
     };
 
     const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:5001';

@@ -16,93 +16,47 @@ const Leaderboard = () => {
   const [category, setCategory] = useState('overall');
 
   // Mock leaderboard data
-  const leaderboardData = [
-    {
-      rank: 1,
-      id: 1,
-      name: 'Sarah Johnson',
-      avatar: 'SJ',
-      points: 15240,
-      quizzes: 142,
-      avgScore: 94,
-      badges: 28,
-      streak: 45,
-      level: 12
-    },
-    {
-      rank: 2,
-      id: 2,
-      name: 'Michael Chen',
-      avatar: 'MC',
-      points: 14890,
-      quizzes: 138,
-      avgScore: 92,
-      badges: 26,
-      streak: 38,
-      level: 11
-    },
-    {
-      rank: 3,
-      id: 3,
-      name: 'Emily Davis',
-      avatar: 'ED',
-      points: 14120,
-      quizzes: 135,
-      avgScore: 91,
-      badges: 25,
-      streak: 41,
-      level: 11
-    },
-    {
-      rank: 4,
-      id: 4,
-      name: 'David Miller',
-      avatar: 'DM',
-      points: 13850,
-      quizzes: 130,
-      avgScore: 90,
-      badges: 24,
-      streak: 35,
-      level: 10
-    },
-    {
-      rank: 5,
-      id: 5,
-      name: 'Jessica Wilson',
-      avatar: 'JW',
-      points: 13420,
-      quizzes: 128,
-      avgScore: 89,
-      badges: 23,
-      streak: 32,
-      level: 10
-    },
-    {
-      rank: 6,
-      id: 6,
-      name: 'Alex Rodriguez',
-      avatar: 'AR',
-      points: 12990,
-      quizzes: 125,
-      avgScore: 88,
-      badges: 22,
-      streak: 28,
-      level: 9
-    },
-    {
-      rank: 7,
-      id: 7,
-      name: 'You',
-      avatar: 'Y',
-      points: 3450,
-      quizzes: 24,
-      avgScore: 86,
-      badges: 12,
-      streak: 12,
-      level: 7,
-      isCurrentUser: true
-    }
-  ];
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userRank, setUserRank] = useState(null);
+
+  React.useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const currentUser = JSON.parse(localStorage.getItem('user'));
+        const response = await import('../services/gamificationService').then(m => m.default.getLeaderboard());
+
+        if (response.status === 'success') {
+          // Map backend data to frontend structure
+          const formattedData = response.data.map((user, index) => ({
+            rank: index + 1,
+            id: user._id,
+            name: user.name,
+            avatar: user.name.charAt(0).toUpperCase(), // persistent avatar URL usage if available
+            points: user.totalPoints,
+            quizzes: 0, // Backend doesn't send this yet, defaulting
+            avgScore: 0,
+            badges: user.badges?.length || 0,
+            streak: 0,
+            level: Math.floor(Math.sqrt(user.totalPoints / 100)) + 1,
+            isCurrentUser: user._id === currentUser?._id
+          }));
+
+          setLeaderboardData(formattedData);
+
+          // Find current user rank
+          const myRank = formattedData.find(u => u.isCurrentUser);
+          if (myRank) setUserRank(myRank);
+        }
+      } catch (error) {
+        console.error('Failed to fetch leaderboard', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+  }, []);
 
   const getRankColor = (rank) => {
     switch (rank) {
@@ -139,31 +93,28 @@ const Leaderboard = () => {
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setTimeRange('all-time')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              timeRange === 'all-time'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${timeRange === 'all-time'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+              }`}
           >
             All Time
           </button>
           <button
             onClick={() => setTimeRange('month')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              timeRange === 'month'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${timeRange === 'month'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+              }`}
           >
             This Month
           </button>
           <button
             onClick={() => setTimeRange('week')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              timeRange === 'week'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${timeRange === 'week'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+              }`}
           >
             This Week
           </button>
@@ -183,58 +134,64 @@ const Leaderboard = () => {
       </div>
 
       {/* Top 3 Podium */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        {/* 2nd Place */}
-        <div className="flex flex-col items-center pt-8">
-          <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${getRankColor(2)} flex items-center justify-center text-2xl font-bold text-white mb-3 shadow-lg`}>
-            {leaderboardData[1].avatar}
+      {loading ? (
+        <div className="text-center py-10">Loading Leaderboard...</div>
+      ) : leaderboardData.length < 3 ? (
+        <div className="text-center py-10">Not enough players for a podium yet! Start playing to climb the ranks.</div>
+      ) : (
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {/* 2nd Place */}
+          <div className="flex flex-col items-center pt-8">
+            <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${getRankColor(2)} flex items-center justify-center text-2xl font-bold text-white mb-3 shadow-lg`}>
+              {leaderboardData[1].avatar}
+            </div>
+            <Medal className="w-8 h-8 text-gray-400 mb-2" />
+            <h3 className="font-bold text-gray-900 dark:text-white text-center">
+              {leaderboardData[1].name}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {leaderboardData[1].points.toLocaleString()} pts
+            </p>
+            <div className="mt-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">#2</p>
+            </div>
           </div>
-          <Medal className="w-8 h-8 text-gray-400 mb-2" />
-          <h3 className="font-bold text-gray-900 dark:text-white text-center">
-            {leaderboardData[1].name}
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {leaderboardData[1].points.toLocaleString()} pts
-          </p>
-          <div className="mt-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
-            <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">#2</p>
-          </div>
-        </div>
 
-        {/* 1st Place */}
-        <div className="flex flex-col items-center">
-          <Crown className="w-10 h-10 text-yellow-500 mb-2 animate-bounce" />
-          <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${getRankColor(1)} flex items-center justify-center text-3xl font-bold text-white mb-3 shadow-xl border-4 border-yellow-300`}>
-            {leaderboardData[0].avatar}
+          {/* 1st Place */}
+          <div className="flex flex-col items-center">
+            <Crown className="w-10 h-10 text-yellow-500 mb-2 animate-bounce" />
+            <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${getRankColor(1)} flex items-center justify-center text-3xl font-bold text-white mb-3 shadow-xl border-4 border-yellow-300`}>
+              {leaderboardData[0].avatar}
+            </div>
+            <h3 className="font-bold text-gray-900 dark:text-white text-center text-lg">
+              {leaderboardData[0].name}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {leaderboardData[0].points.toLocaleString()} pts
+            </p>
+            <div className="mt-2 px-4 py-1 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full">
+              <p className="text-xs font-bold text-white">#1 Champion</p>
+            </div>
           </div>
-          <h3 className="font-bold text-gray-900 dark:text-white text-center text-lg">
-            {leaderboardData[0].name}
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {leaderboardData[0].points.toLocaleString()} pts
-          </p>
-          <div className="mt-2 px-4 py-1 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full">
-            <p className="text-xs font-bold text-white">#1 Champion</p>
-          </div>
-        </div>
 
-        {/* 3rd Place */}
-        <div className="flex flex-col items-center pt-8">
-          <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${getRankColor(3)} flex items-center justify-center text-2xl font-bold text-white mb-3 shadow-lg`}>
-            {leaderboardData[2].avatar}
-          </div>
-          <Medal className="w-8 h-8 text-orange-600 mb-2" />
-          <h3 className="font-bold text-gray-900 dark:text-white text-center">
-            {leaderboardData[2].name}
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {leaderboardData[2].points.toLocaleString()} pts
-          </p>
-          <div className="mt-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
-            <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">#3</p>
+          {/* 3rd Place */}
+          <div className="flex flex-col items-center pt-8">
+            <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${getRankColor(3)} flex items-center justify-center text-2xl font-bold text-white mb-3 shadow-lg`}>
+              {leaderboardData[2].avatar}
+            </div>
+            <Medal className="w-8 h-8 text-orange-600 mb-2" />
+            <h3 className="font-bold text-gray-900 dark:text-white text-center">
+              {leaderboardData[2].name}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {leaderboardData[2].points.toLocaleString()} pts
+            </p>
+            <div className="mt-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">#3</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Full Leaderboard */}
       <Card>
@@ -249,11 +206,10 @@ const Leaderboard = () => {
             {leaderboardData.map((user) => (
               <div
                 key={user.id}
-                className={`flex items-center gap-4 p-4 rounded-xl transition-all ${
-                  user.isCurrentUser
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500'
-                    : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
+                className={`flex items-center gap-4 p-4 rounded-xl transition-all ${user.isCurrentUser
+                  ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500'
+                  : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
               >
                 {/* Rank Badge */}
                 <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${getRankColor(user.rank)} flex items-center justify-center flex-shrink-0 shadow-md`}>

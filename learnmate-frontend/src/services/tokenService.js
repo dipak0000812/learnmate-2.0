@@ -78,16 +78,33 @@ class TokenService {
     }
   }
 
-  // Schedule automatic token refresh (DISABLED FOR STABILITY)
+  // Schedule automatic token refresh
   scheduleTokenRefresh(token) {
-    // console.log('Auto-refresh disabled for stability.');
-    return;
+    const expiry = this.getTokenExpiryTime(token);
+    if (!expiry) return;
+
+    // Refresh 1 minute before expiry
+    const timeout = expiry - Date.now() - (60 * 1000);
+
+    if (this.refreshTimer) clearTimeout(this.refreshTimer);
+
+    if (timeout > 0) {
+      console.log(`Token refresh scheduled in ${Math.round(timeout / 1000)}s`);
+      this.refreshTimer = setTimeout(() => {
+        this.refreshToken().catch(err => console.error('Auto-refresh failed', err));
+      }, timeout);
+    } else {
+      // If already expired or close to it, refresh immediately
+      this.refreshToken().catch(err => console.error('Immediate refresh failed', err));
+    }
   }
 
   // Initialize token refresh on app start
   initTokenRefresh() {
-    // console.log('Auto-refresh disabled for stability.');
-    return;
+    const token = localStorage.getItem('token');
+    if (token) {
+      this.scheduleTokenRefresh(token);
+    }
   }
 
   // Clear all tokens

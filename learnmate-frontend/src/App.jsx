@@ -45,9 +45,9 @@ const ProtectedRoute = ({ children, requireEmailVerified = true, requireOnboardi
   }
 
   // CHECK DISABLED FOR DEMO
-  // if (requireEmailVerified && !user?.emailVerified) {
-  //   return <Navigate to="/verify-email-notice" replace />;
-  // }
+  if (requireEmailVerified && !user?.emailVerified) {
+    return <Navigate to="/verify-email-notice" replace />;
+  }
 
   if (requireOnboarding && user?.emailVerified && !user?.onboardingCompleted) {
     return <Navigate to="/onboarding" replace />;

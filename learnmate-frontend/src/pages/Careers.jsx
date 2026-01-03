@@ -231,8 +231,8 @@ const Careers = () => {
         scores: scores, // Critical: AI requires 'scores' object
         interests: onboardingData?.interests || [],
         skills: onboardingData?.knownSkills || [],
-        semester: Number(onboardingData?.currentYear || 1) * 2,
-        dreamCareer: onboardingData?.dreamCareer || user?.dreamCareer
+        semester: user?.semester || 1,
+        dreamCareer: onboardingData?.targetRole || user?.dreamCareer
       };
 
       console.log('Sending to AI:', userData);

@@ -1,4 +1,6 @@
 const express = require('express');
+const { body } = require('express-validator');
+const validate = require('../middleware/validate');
 const router = express.Router();
 const auth = require('../middleware/authMiddleware');
 const User = require('../models/User');
@@ -28,51 +30,63 @@ const normalizeMilestones = (phases = []) => {
 };
 
 // Save onboarding step
-router.post('/save-step', auth, async (req, res) => {
-  try {
-    const { step, data } = req.body;
-    const user = await User.findById(req.user._id);
+router.post(
+  '/save-step',
+  auth,
+  [
+    body('step').isIn(['interests', 'goals', 'assessment', 'skills', 'timeline']).withMessage('Invalid step'),
+    body('data').isObject().withMessage('Data must be an object'),
+    // Conditional validation could be complex here, but basic structure check is good
+    body('data.interests').if(body('step').equals('interests')).isArray().withMessage('Interests must be an array'),
+    body('data.targetRole').if(body('step').equals('goals')).notEmpty().withMessage('Target role is required'),
+    body('data.timeline').if(body('step').equals('goals')).isIn(['3-months', '6-months', '1-year']).withMessage('Invalid timeline')
+  ],
+  validate,
+  async (req, res) => {
+    try {
+      const { step, data } = req.body;
+      const user = await User.findById(req.user._id);
 
-    if (!user) {
-      return res.status(404).json({ status: 'fail', message: 'User not found' });
+      if (!user) {
+        return res.status(404).json({ status: 'fail', message: 'User not found' });
+      }
+
+      if (!user.onboardingData) {
+        user.onboardingData = {};
+      }
+
+      if (step === 'interests') {
+        user.onboardingData.interests = data.interests || [];
+        if (data.skillLevel) user.onboardingData.skillLevel = data.skillLevel;
+      } else if (step === 'goals') {
+        user.onboardingData.dreamCompanies = data.dreamCompanies || [];
+        user.onboardingData.targetRole = data.targetRole || '';
+        if (data.timeline) user.onboardingData.timeline = data.timeline;
+      } else if (step === 'assessment') {
+        user.onboardingData.assessmentCompleted = true;
+        user.onboardingData.assessmentScore = data.score || 0;
+        user.onboardingData.assessmentResults = data.results || {};
+      } else if (step === 'skills') {
+        user.onboardingData.knownSkills = data.knownSkills || [];
+      } else if (step === 'timeline') {
+        user.onboardingData.timeline = data.timeline || user.onboardingData.timeline;
+      }
+
+      await user.save();
+
+      res.json({
+        status: 'success',
+        message: 'Onboarding step saved',
+        data: { onboardingData: user.onboardingData }
+      });
+    } catch (error) {
+      console.error('Save onboarding step error:', error);
+      res.status(500).json({
+        status: 'fail',
+        message: 'Failed to save onboarding data'
+      });
     }
-
-    if (!user.onboardingData) {
-      user.onboardingData = {};
-    }
-
-    if (step === 'interests') {
-      user.onboardingData.interests = data.interests || [];
-      if (data.skillLevel) user.onboardingData.skillLevel = data.skillLevel;
-    } else if (step === 'goals') {
-      user.onboardingData.dreamCompanies = data.dreamCompanies || [];
-      user.onboardingData.targetRole = data.targetRole || '';
-      if (data.timeline) user.onboardingData.timeline = data.timeline;
-    } else if (step === 'assessment') {
-      user.onboardingData.assessmentCompleted = true;
-      user.onboardingData.assessmentScore = data.score || 0;
-      user.onboardingData.assessmentResults = data.results || {};
-    } else if (step === 'skills') {
-      user.onboardingData.knownSkills = data.knownSkills || [];
-    } else if (step === 'timeline') {
-      user.onboardingData.timeline = data.timeline || user.onboardingData.timeline;
-    }
-
-    await user.save();
-
-    res.json({
-      status: 'success',
-      message: 'Onboarding step saved',
-      data: { onboardingData: user.onboardingData }
-    });
-  } catch (error) {
-    console.error('Save onboarding step error:', error);
-    res.status(500).json({
-      status: 'fail',
-      message: 'Failed to save onboarding data'
-    });
-  }
-});
+  });
 
 // Get onboarding progress
 router.get('/progress', auth, async (req, res) => {

@@ -47,6 +47,7 @@ if (process.env.AI_SERVICE_URL) {
 
   app.use(
     '/api/ai',
+    require('./middleware/rateLimiters').aiProxyLimiter, // Added Node-side rate limiting for AI
     createProxyMiddleware({
       target: AI_URL,
       changeOrigin: true,
@@ -81,24 +82,32 @@ app.use(morgan('dev'));
 app.set('trust proxy', 1);
 
 // Rate limiter (basic)
-const limiter = rateLimit({
-  windowMs: Number(process.env.RATE_WINDOW_MS || 15 * 60 * 1000), // 15 minutes
-  max: Number(process.env.RATE_MAX || 1000), // Increased from 100 to 1000 for dev
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: 'Too many requests from this IP, please try again later.'
-});
-app.use(limiter);
+// Rate limiters
+const { authLimiter, apiLimiter, aiProxyLimiter } = require('./middleware/rateLimiters');
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/careers', careerRoutes);
-app.use('/api/gamification', gamificationRoutes);
-app.use('/api/questions', questionRoutes);
-app.use('/api/assessments', assessmentRoutes);
-app.use('/api/roadmaps', roadmapRoutes);
-app.use('/api/onboarding', onboardingRoutes);
+// Apply limiters to specific routes
+// AI Proxy Limiter applied to AI paths
+if (process.env.AI_SERVICE_URL) {
+  // We apply this BEFORE the proxy verification logic if we want to block fast
+}
+
+// Routes with tiered limits
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/users', apiLimiter, userRoutes);
+app.use('/api/careers', apiLimiter, careerRoutes);
+app.use('/api/gamification', apiLimiter, gamificationRoutes);
+app.use('/api/questions', apiLimiter, questionRoutes);
+app.use('/api/assessments', apiLimiter, assessmentRoutes);
+app.use('/api/roadmaps', apiLimiter, roadmapRoutes);
+app.use('/api/onboarding', apiLimiter, onboardingRoutes);
+
+// Apply proxy limiter specifically to the proxy path if needed, 
+// but since proxy is mounted via 'app.use', we can wrap it.
+// However, the proxy setupblock is above. let's modify the proxy setup to include limiter or just rely on python side.
+// Better: Add global fallback api limiter for any other route?
+// For now, these explicit mounts are good. 
+// Note: The AI routes are mounted at '/api/ai' via proxy middleware above.
+// We should insert the limit there.
 
 // Health route
 app.get('/', (req, res) => res.json({ status: 'ok', service: 'learnmate-backend' }));

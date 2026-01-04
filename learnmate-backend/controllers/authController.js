@@ -109,7 +109,8 @@ exports.register = async (req, res, next) => {
         try {
             await emailService.sendVerificationEmail(user.email, verificationToken, user.name);
         } catch (emailError) {
-            console.warn('⚠️ Verification email failed (check SMTP config):', emailError.message);
+            const logger = require('../middleware/logger');
+            logger.warn('⚠️ Verification email failed (check SMTP config):', emailError.message);
             // Don't block registration if email service is down/unconfigured
         }
 
@@ -126,7 +127,8 @@ exports.register = async (req, res, next) => {
             }
         });
     } catch (err) {
-        console.error('Registration error:', err);
+        const logger = require('../middleware/logger');
+        logger.error('Registration error:', err.message); // Log message only, stack handled by middleware if thrown
         next(err);
     }
 };

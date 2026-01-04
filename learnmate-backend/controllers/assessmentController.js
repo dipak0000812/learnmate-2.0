@@ -48,7 +48,8 @@ exports.submit = async (req, res, next) => {
       user.level = Math.max(1, Math.floor((user.totalPoints || 0) / 500) + 1);
       await user.save();
     } else if (user && recentAssessment) {
-      console.log(`User ${userId} - Skipping points award (duplicate/recent submission)`);
+      const logger = require('../middleware/logger');
+      logger.info(`User ${userId} - Skipping points award (duplicate/recent submission)`);
     }
 
     res.status(201).json({ status: 'success', data: assessment });

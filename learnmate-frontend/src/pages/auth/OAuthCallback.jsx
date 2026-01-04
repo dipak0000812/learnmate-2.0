@@ -10,7 +10,18 @@ const OAuthCallback = () => {
 
   useEffect(() => {
     const processCallback = async () => {
-      const token = searchParams.get('token');
+      // SECURITY FIX: Read token from cookie, not URL
+      const getCookie = (name) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+      };
+
+      const deleteCookie = (name) => {
+        document.cookie = name + '=; Max-Age=-99999999; path=/';
+      };
+
+      const token = getCookie('oauth_otp');
       const error = searchParams.get('error');
 
       if (error) {
@@ -20,17 +31,20 @@ const OAuthCallback = () => {
       }
 
       if (!token) {
-        toast.error('No token received');
+        // Fallback: Check if token is still in URL (transition period or error modes)
+        // But for strict security we prefer cookie.
+        // Showing specific error helps debugging.
+        toast.error('Secure login failed (Token Missing)');
         navigate('/login');
         return;
       }
 
+      // Cleanup cookie immediately
+      deleteCookie('oauth_otp');
+
       const result = await loginWithToken(token);
       if (result.success) {
         toast.success('Successfully logged in w/ Google! 🚀');
-        // Check for onboarding
-        // We can't access state easily here without async fetch, but loginWithToken fetches user.
-        // Let's rely on Dashboard/ProtectedRoute redirect logic
         navigate('/dashboard');
       } else {
         toast.error('Session creation failed');

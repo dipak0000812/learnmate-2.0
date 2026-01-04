@@ -56,8 +56,11 @@ def require_api_key():
     
     api_key = os.getenv('AI_API_KEY')
     if not api_key:
-        logger.warning("AI_API_KEY not set in environment - allowing request (INSECURE)")
-        return
+        logger.critical("SECURITY ALERT: AI_API_KEY not set! Rejecting all requests.")
+        return jsonify({
+            "status": "fail",
+            "message": "Server Configuration Error: Missing API Key"
+        }), 500
 
     auth_header = request.headers.get('X-API-Key')
     if not auth_header or auth_header != api_key:

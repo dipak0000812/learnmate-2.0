@@ -289,26 +289,21 @@ exports.googleCallback = (req, res, next) => {
         if (err || !user) {
             return res.redirect('http://localhost:3000/login?error=oauth_failed');
         }
-        // Generate tokens manually as we do in login
-        // We need to access the response functions we defined earlier or duplicate logic
-        // Duplicating logic here for clarity as sendAuthResponse relies on 'res' object of API
         try {
             const token = createAccessToken(user._id);
             const refreshToken = createRefreshToken(user._id);
             setRefreshCookie(res, refreshToken);
 
-            // Redirect to frontend with token in query param? 
-            // Or Render a temporary page that posts message to opener?
-            // Standard approach for SPA: Redirect to a handler page with token
-
-            // SECURITY NOTE: Passing token in URL has risks but is standard for OAuth -> SPA transitions 
-            // if short lived. Better: Redirect to a 'processing' page which hits an endpoint to get the token via cookie?
-            // Let's go with the query param approach but only for the Access Token (short lived).
-            // The Refresh token is already in the httpOnly Cookie set above!
+            // SECURITY FIX: Send access token via short-lived cookie instead of URL
+            res.cookie('oauth_otp', token, {
+                httpOnly: false, // Client needs to read this once
+                secure: isProd,
+                sameSite: 'lax',
+                maxAge: 15000 // 15 seconds
+            });
 
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-            res.redirect(`${frontendUrl}/oauth/callback?token=${token}`);
-
+            res.redirect(`${frontendUrl}/oauth/callback`); // No token in URL
         } catch (error) {
             next(error);
         }
@@ -326,8 +321,17 @@ exports.githubCallback = (req, res, next) => {
             const token = createAccessToken(user._id);
             const refreshToken = createRefreshToken(user._id);
             setRefreshCookie(res, refreshToken);
+
+            // SECURITY FIX: Send access token via short-lived cookie instead of URL
+            res.cookie('oauth_otp', token, {
+                httpOnly: false, // Client needs to read this once
+                secure: isProd,
+                sameSite: 'lax',
+                maxAge: 15000 // 15 seconds
+            });
+
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-            res.redirect(`${frontendUrl}/oauth/callback?token=${token}`);
+            res.redirect(`${frontendUrl}/oauth/callback`); // No token in URL
         } catch (error) {
             next(error);
         }

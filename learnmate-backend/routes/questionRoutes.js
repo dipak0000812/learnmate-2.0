@@ -8,7 +8,7 @@ const validate = require('../middleware/validate');
 const router = express.Router();
 
 // Admin guard via shared middleware
-const requireAdmin = require('../middleware/requireAdmin');
+const requireAdmin = require('../middleware/adminMiddleware');
 
 // Public list (curated fetch via query)
 router.get('/', [

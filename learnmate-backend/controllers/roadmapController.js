@@ -118,6 +118,11 @@ exports.getById = async (req, res, next) => {
   try {
     const roadmap = await Roadmap.findById(req.params.id).lean();
     if (!roadmap) return res.status(404).json({ status: 'fail', message: 'Not found' });
+
+    // SECURITY FIX: IDOR Prevention - Check Ownership
+    if (roadmap.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ status: 'fail', message: 'Unauthorized access to this roadmap' });
+    }
     res.json({ status: 'success', data: roadmap });
   } catch (err) { next(err); }
 };
@@ -144,6 +149,12 @@ exports.completeGoal = async (req, res, next) => {
     const { id, goalId } = { id: req.params.id, goalId: req.params.goalId };
     const roadmap = await Roadmap.findById(id);
     if (!roadmap) return res.status(404).json({ status: 'fail', message: 'Not found' });
+
+    // SECURITY FIX: IDOR Prevention - Check Ownership
+    if (roadmap.userId.toString() !== req.user._id.toString()) {
+      console.warn(`[Security] IDOR attempt by user ${req.user._id} on roadmap ${id}`);
+      return res.status(403).json({ status: 'fail', message: 'Unauthorized access to this roadmap' });
+    }
 
     // Handle string format "phaseIndex-taskIndex" (e.g., "0-1")
     // Fallback: If generic string, try to find milestone directly (legacy)

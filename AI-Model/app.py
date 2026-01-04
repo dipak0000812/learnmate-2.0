@@ -70,8 +70,65 @@ def require_api_key():
             "message": "Unauthorized"
         }), 401
 
+# Rate Limiting Logic (In-Memory)
+import time
+from functools import wraps
 
-# ... rest of your app.py code continues here
+class RateLimiter:
+    def __init__(self, limit=60, window=60):
+        self.limit = limit
+        self.window = window
+        self.requests = {}
+
+    def is_allowed(self, ip):
+        current = time.time()
+        # Clean old requests
+        self.requests = {k: v for k, v in self.requests.items() if current - v['start'] < self.window}
+        
+        if ip not in self.requests:
+            self.requests[ip] = {'count': 1, 'start': current}
+            return True
+        
+        if self.requests[ip]['count'] < self.limit:
+            self.requests[ip]['count'] += 1
+            return True
+        
+        # Reset if window passed (handled by cleanup logic mostly, but explicit check)
+        if current - self.requests[ip]['start'] > self.window:
+             self.requests[ip] = {'count': 1, 'start': current}
+             return True
+             
+        return False
+
+limiter_instance = RateLimiter(limit=60, window=60) # 60 req/min/IP
+
+def limit_rate(f):
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        # Allow localhost bypass if needed, but safer to enforce global
+        if not limiter_instance.is_allowed(request.remote_addr):
+            logger.warning(f"Rate limit exceeded for {request.remote_addr}")
+            return jsonify({
+                "status": "fail",
+                "message": "Too many requests. Please try again later."
+            }), 429
+        return f(*args, **kwargs)
+    return wrapped
+
+def validate_payload_size(data, max_keys=20, max_str_len=5000):
+    """Defense against massive payloads causing DoS"""
+    if len(str(data)) > 50000: # Rough total size bytes
+        return False, "Payload too large"
+    if isinstance(data, dict):
+        if len(data) > max_keys:
+             return False, "Too many fields"
+        for k, v in data.items():
+            if isinstance(v, str) and len(v) > max_str_len:
+                return False, f"Field '{k}' too long"
+            if isinstance(v, list) and len(v) > 50:
+                return False, f"List '{k}' too long"
+    return True, None
+
 
 # Initialize AI models
 try:
@@ -96,35 +153,23 @@ def health_check():
 
 # Quiz Evaluation Endpoint
 @app.route('/ai/evaluate-quiz', methods=['POST'])
+@limit_rate
 def evaluate_quiz():
-    """
-    Evaluate quiz answers and provide detailed feedback
-    
-    Expected Input:
-    {
-        "answers": [{"questionId": "q1", "answer": "user answer", "type": "mcq|subjective"}],
-        "correctAnswers": [{"questionId": "q1", "answer": "correct answer", "topic": "Linear Algebra"}],
-        "subject": "Machine Learning"
-    }
-    """
+    """Evaluate quiz answers and provide detailed feedback"""
     try:
         logger.info("Received quiz evaluation request")
         data = request.get_json()
         
-        # Validate input
         if not data:
-            return jsonify({
-                "status": "fail",
-                "message": "No data provided"
-            }), 400
+            return jsonify({"status": "fail", "message": "No data provided"}), 400
+            
+        is_valid, err_msg = validate_payload_size(data)
+        if not is_valid:
+             return jsonify({"status": "fail", "message": err_msg}), 400
         
         if 'answers' not in data or 'correctAnswers' not in data:
-            return jsonify({
-                "status": "fail",
-                "message": "Missing required fields: answers or correctAnswers"
-            }), 400
-        
-        # Evaluate quiz
+            return jsonify({"status": "fail", "message": "Missing required fields"}), 400
+            
         result = quiz_evaluator.evaluate(
             answers=data['answers'],
             correct_answers=data['correctAnswers'],
@@ -132,56 +177,34 @@ def evaluate_quiz():
         )
         
         logger.info(f"Quiz evaluated successfully. Score: {result['score']}/{result['total']}")
-        
-        return jsonify({
-            "status": "success",
-            "data": result
-        }), 200
+        return jsonify({"status": "success", "data": result}), 200
         
     except Exception as e:
         logger.error(f"Error in quiz evaluation: {str(e)}")
-        return jsonify({
-            "status": "fail",
-            "message": f"Internal server error: {str(e)}"
-        }), 500
+        return jsonify({"status": "fail", "message": f"Internal server error: {str(e)}"}), 500
 
 # Roadmap Generation Endpoint
 @app.route('/ai/generate-roadmap', methods=['POST'])
+@limit_rate
 def generate_roadmap():
-    """
-    Generate personalized learning roadmap
-    
-    Expected Input:
-    {
-        "userId": "user123",
-        "performance": {"AI": 65, "Math": 85, "Programming": 75},
-        "semester": 3,
-        "interests": ["AI", "ML"],
-        "targetCareer": "Data Scientist",
-        "timeAvailable": 20
-    }
-    """
+    """Generate personalized learning roadmap"""
     try:
         logger.info("Received roadmap generation request")
         data = request.get_json()
         
-        # Validate input
         if not data:
-            return jsonify({
-                "status": "fail",
-                "message": "No data provided"
-            }), 400
+            return jsonify({"status": "fail", "message": "No data provided"}), 400
+            
+        is_valid, err_msg = validate_payload_size(data)
+        if not is_valid:
+             return jsonify({"status": "fail", "message": err_msg}), 400
         
         required_fields = ['userId', 'performance', 'semester']
         missing_fields = [field for field in required_fields if field not in data]
         
         if missing_fields:
-            return jsonify({
-                "status": "fail",
-                "message": f"Missing required fields: {', '.join(missing_fields)}"
-            }), 400
+            return jsonify({"status": "fail", "message": f"Missing fields: {', '.join(missing_fields)}"}), 400
         
-        # Generate roadmap
         result = roadmap_generator.generate(
             user_id=data['userId'],
             performance=data['performance'],
@@ -193,51 +216,31 @@ def generate_roadmap():
         )
         
         logger.info(f"Roadmap generated for user {data['userId']}")
-        
-        return jsonify({
-            "status": "success",
-            "data": result
-        }), 200
+        return jsonify({"status": "success", "data": result}), 200
         
     except Exception as e:
         logger.error(f"Error in roadmap generation: {str(e)}")
-        return jsonify({
-            "status": "fail",
-            "message": f"Internal server error: {str(e)}"
-        }), 500
+        return jsonify({"status": "fail", "message": f"Internal server error: {str(e)}"}), 500
 
 # Career Recommendation Endpoint
 @app.route('/ai/recommend-career', methods=['POST'])
+@limit_rate
 def recommend_career():
-    """
-    Recommend careers based on performance and interests
-    
-    Expected Input:
-    {
-        "scores": {"AI": 82, "Programming": 90, "Math": 78, "DataScience": 85},
-        "interests": ["AI", "Research"],
-        "skills": ["Python", "Machine Learning", "Statistics"],
-        "semester": 4
-    }
-    """
+    """Recommend careers based on performance and interests"""
     try:
         logger.info("Received career recommendation request")
         data = request.get_json()
         
-        # Validate input
         if not data:
-            return jsonify({
-                "status": "fail",
-                "message": "No data provided"
-            }), 400
+             return jsonify({"status": "fail", "message": "No data provided"}), 400
+
+        is_valid, err_msg = validate_payload_size(data)
+        if not is_valid:
+             return jsonify({"status": "fail", "message": err_msg}), 400
         
         if 'scores' not in data:
-            return jsonify({
-                "status": "fail",
-                "message": "Missing required field: scores"
-            }), 400
+            return jsonify({"status": "fail", "message": "Missing required field: scores"}), 400
         
-        # Get recommendations
         result = career_recommender.recommend(
             scores=data['scores'],
             interests=data.get('interests', []),
@@ -246,18 +249,11 @@ def recommend_career():
         )
         
         logger.info(f"Career recommendations generated: {len(result['recommendations'])} careers")
-        
-        return jsonify({
-            "status": "success",
-            "data": result
-        }), 200
+        return jsonify({"status": "success", "data": result}), 200
         
     except Exception as e:
         logger.error(f"Error in career recommendation: {str(e)}")
-        return jsonify({
-            "status": "fail",
-            "message": f"Internal server error: {str(e)}"
-        }), 500
+        return jsonify({"status": "fail", "message": f"Internal server error: {str(e)}"}), 500
 
 # Batch Analysis Endpoint (Advanced Feature)
 @app.route('/ai/batch-analyze', methods=['POST'])

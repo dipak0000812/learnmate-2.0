@@ -10,7 +10,8 @@ const connectDB = async () => {
     await mongoose.connect(uri, {
       // modern mongoose uses a single options object; keep defaults sane
       autoIndex: process.env.MONGO_AUTO_INDEX === 'true',
-      maxPoolSize: Number(process.env.MONGO_MAX_POOL || 10)
+      maxPoolSize: Number(process.env.MONGO_MAX_POOL || 50),
+      minPoolSize: Number(process.env.MONGO_MIN_POOL || 5) // Maintain some connections
     });
     console.log('MongoDB connected ✅');
 

@@ -112,5 +112,10 @@ app.use((req, res, next) => {
 app.use(errorMiddleware);
 
 // Start server
+// Start server ONLY if run directly (not if imported by cluster.js)
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+module.exports = app;

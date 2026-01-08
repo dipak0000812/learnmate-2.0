@@ -29,7 +29,15 @@ if (cluster.isPrimary) {
 
     // Note: app.listen inside app.js is skipped because of require.main check
     // So we start it here explicitly for the worker
-    app.listen(PORT, () => {
+    // So we start it here explicitly for the worker
+    const server = app.listen(PORT, () => {
         console.log(`Worker ${process.pid} started on port ${PORT}`);
     });
+
+    // Initialize Socket.io
+    const socketService = require('./services/socketService');
+    const io = socketService.init(server);
+
+    // Apply Auth Middleware
+    io.use(require('./middleware/socketAuth'));
 }

@@ -17,8 +17,23 @@ class LLMClient:
             logger.warning("GEMINI_API_KEY not found in environment variables")
         else:
             genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-1.5-flash') # Use Flash for speed/cost efficiently
-            logger.info("Gemini API Client initialized")
+            # STABILIZATION: Lock temperature to 0.2 to prevent hallucinations and ensure consistency
+            self.model = genai.GenerativeModel(
+                'gemini-1.5-flash',
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.2,
+                    top_p=0.8,
+                    top_k=40,
+                    response_mime_type='application/json'
+                ),
+                safety_settings=[
+                    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+                ]
+            )
+            logger.info("Gemini API Client initialized with STABLE config (Temp: 0.2)")
 
     def generate_json(self, prompt, context=""):
         """
@@ -39,17 +54,8 @@ class LLMClient:
 
         try:
             response = self.model.generate_content(full_prompt)
-            text = response.text.strip()
-            
-            # Cleanup common markdown issues if the model ignores instruction
-            if text.startswith("```json"):
-                text = text.replace("```json", "", 1)
-            if text.startswith("```"):
-                text = text.replace("```", "", 1)
-            if text.endswith("```"):
-                text = text.rsplit("```", 1)[0]
-                
-            return json.loads(text.strip())
+            # With response_mime_type='application/json', text is guaranteed to be JSON
+            return json.loads(response.text)
         except Exception as e:
             logger.error(f"LLM Generation Error: {str(e)}")
             logger.error(f"Raw Response: {response.text if 'response' in locals() else 'None'}")

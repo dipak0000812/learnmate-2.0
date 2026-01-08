@@ -8,18 +8,26 @@ import json
 import os
 import logging
 from collections import defaultdict
+from .llm_client import LLMClient  # Real AI integration
 
 logger = logging.getLogger(__name__)
 
 
 class QuizGenerator:
     """
-    Generate personalized quizzes based on student performance
+    Generate personalized quizzes using Generative AI (Gemini)
     """
     
     def __init__(self, question_bank_file='data/question_bank.json'):
         self.question_bank_file = question_bank_file
+        # Fallback bank only
         self.question_bank = self._load_question_bank()
+        try:
+           self.llm_client = LLMClient()
+           self.ai_enabled = True
+        except Exception as e:
+           logger.error(f"Failed to initialize AI for Quiz Generator: {e}")
+           self.ai_enabled = False
     
     def _load_question_bank(self):
         """Load or create question bank"""
@@ -187,17 +195,18 @@ class QuizGenerator:
     
     def generate_personalized_quiz(self, user_performance, num_questions=10, focus_weak_areas=True):
         """
-        Generate a personalized quiz based on user performance
-        
-        Args:
-            user_performance: Dict with subject scores and weak topics
-            num_questions: Number of questions to generate
-            focus_weak_areas: Whether to focus on weak areas (True) or balanced (False)
-        
-        Returns:
-            dict: Generated quiz
+        Generate a personalized quiz, preferring Real AI generation.
+        Falls back to static bank if AI fails.
         """
-        logger.info(f"Generating personalized quiz for user with {num_questions} questions")
+        if self.ai_enabled:
+            try:
+                logger.info(f"🤖 Generating AI Quiz for user. Questions: {num_questions}")
+                return self._generate_with_ai(user_performance, num_questions, focus_weak_areas)
+            except Exception as e:
+                logger.error(f"AI Quiz Generation failed, falling back to static: {e}")
+                # Fallthrough to static logic below
+        
+        logger.info(f"Fallback: Generating static quiz. Questions: {num_questions}")
         
         try:
             # Analyze performance to determine subjects and difficulty
@@ -262,16 +271,69 @@ class QuizGenerator:
                 'personalization': {
                     'focused_on_weak_areas': focus_weak_areas,
                     'target_subjects': list(subject_difficulty.keys()),
-                    'weak_topics_included': weak_topics
+                    'weak_topics_included': weak_topics,
+                    'method': 'static_fallback'
                 }
             }
             
-            logger.info(f"Generated quiz with {len(questions)} questions")
             return quiz
             
         except Exception as e:
             logger.error(f"Error generating quiz: {e}")
             raise
+
+    def _generate_with_ai(self, user_performance, num_questions, focus_weak_areas):
+        """Internal method to call LLM"""
+        
+        weak_topics = user_performance.get('weak_topics', [])
+        subjects = user_performance.get('scores', {}).keys() or ["General Knowledge"]
+        
+        prompt = f"""
+        Act as an expert exam setter. Generate a personalized quiz JSON.
+        
+        Student Profile:
+        - Subjects: {list(subjects)}
+        - Weak Areas: {weak_topics} (Focus heavily on these if Focus=True)
+        - Focus Weak Areas: {focus_weak_areas}
+        - Difficulty Distribution: Adaptive (mix of easy/medium/hard based on inferred level)
+        
+        Requirement:
+        - Generate EXACTLY {num_questions} unique, challenging, high-quality multiple-choice questions.
+        - Output strictly valid JSON.
+        
+        JSON Structure:
+        {{
+            "title": "Quiz Title",
+            "description": "Short description",
+            "questions": [
+                {{
+                    "questionId": "q1",
+                    "question": "The question text",
+                    "options": ["A", "B", "C", "D"],
+                    "answer": "The correct option text (must match one option exactly)",
+                    "topic": "The specific micro-topic",
+                    "difficulty": "easy|medium|hard",
+                    "subject": "Math|Science|etc"
+                }}
+            ]
+        }}
+        """
+        
+        response = self.llm_client.generate_json(prompt)
+        
+        # Post-processing to ensure field integrity
+        if 'questions' in response:
+            for idx, q in enumerate(response['questions']):
+                q['questionId'] = f"ai_q{idx+1}"
+        
+        response['generated_at'] = self._get_timestamp()
+        response['personalization'] = {
+            'focused_on_weak_areas': focus_weak_areas,
+            'weak_topics_included': weak_topics,
+            'method': 'generative_ai'
+        }
+        
+        return response
     
     def _determine_difficulty_levels(self, user_performance):
         """Determine difficulty distribution based on performance"""

@@ -1,6 +1,6 @@
-// src/services/api.js - axios instance with token refresh handling
 import api from './axiosInstance';
 import tokenService from './tokenService';
+import { toast } from 'sonner';
 
 // Request interceptor - Add auth token and check expiry
 api.interceptors.request.use(
@@ -81,6 +81,11 @@ api.interceptors.response.use(
     // If 403 (Forbidden) - user might not have permission
     if (error.response?.status === 403) {
       console.error('Access forbidden');
+    }
+
+    // Rate Limiting Handling (429)
+    if (error.response?.status === 429) {
+      toast.error('Too many requests. Please slow down.');
     }
 
     return Promise.reject(error);

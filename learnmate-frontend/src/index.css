@@ -1,12 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans text-slate-900 bg-slate-50 dark:bg-slate-950 dark:text-slate-50 antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading tracking-tight;
+  }
+}
+
 /* Smooth fade-in animation */
 @keyframes fade-in {
   from {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -23,6 +42,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -54,7 +74,10 @@ html {
 }
 
 /* Smooth transitions for all interactive elements */
-button, a, input, textarea {
+button,
+a,
+input,
+textarea {
   transition: all 0.3s ease;
 }
 
@@ -75,28 +98,25 @@ button, a, input, textarea {
   0% {
     background-position: -1000px 0;
   }
+
   100% {
     background-position: 1000px 0;
   }
 }
 
 .animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    #f0f0f0 25%,
-    #e0e0e0 50%,
-    #f0f0f0 75%
-  );
+  background: linear-gradient(90deg,
+      #f0f0f0 25%,
+      #e0e0e0 50%,
+      #f0f0f0 75%);
   background-size: 1000px 100%;
   animation: shimmer 2s infinite;
 }
 
 .dark .animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    #2a2a2a 25%,
-    #3a3a3a 50%,
-    #2a2a2a 75%
-  );
+  background: linear-gradient(90deg,
+      #2a2a2a 25%,
+      #3a3a3a 50%,
+      #2a2a2a 75%);
   background-size: 1000px 100%;
 }

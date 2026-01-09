@@ -26,93 +26,92 @@ const normalizeMilestones = (phases = []) => {
   });
 };
 
+const Job = require('../models/Job');
+
 exports.generate = async (req, res, next) => {
   try {
     const { dreamCareer, assessmentId } = req.body;
     const userId = req.user._id;
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const assessment = assessmentId ? await Assessment.findById(assessmentId) : null;
-
-    // Prepare payload for AI Service
-    // Default performance if no assessment provided
-    let performance = { "General": 50 };
-    if (assessment && assessment.answers) {
-      // Simple aggregated score logic or mapped from assessment
-      // Ideally assessment stores topic-wise scores. Use overall score for now.
-      performance = { "General": assessment.total > 0 ? (assessment.score / assessment.total) * 100 : 50 };
-    }
-
-    // usage:
-    // 3-months = intensive (20h/week)
-    // 6-months = balanced (10h/week)
-    // 1-year = steady (5h/week)
-    const timeMap = { '3-months': 20, '6-months': 10, '1-year': 5 };
-
-    // Use onboarding data or profile data if available
-    const userInterests = user.onboardingData?.interests?.length > 0 ? user.onboardingData.interests : (user.interests || [dreamCareer]);
-    const userSkills = user.onboardingData?.knownSkills?.length > 0 ? user.onboardingData.knownSkills : (user.skills || []);
-    const userTimeline = user.onboardingData?.timeline || '6-months';
-
-    const aiPayload = {
-      userId: user._id.toString(),
-      performance: performance,
-      semester: user.semester || 1,
-      interests: userInterests,
-      targetCareer: dreamCareer,
-      timeAvailable: timeMap[userTimeline] || 15,
-      knownSkills: userSkills,
-      goal: `Generate a roadmap to become a ${dreamCareer}`
+    // Create Job Payload
+    const payload = {
+      userId: userId.toString(),
+      dreamCareer,
+      assessmentId,
+      // We will fetch User details in the Worker to ensure fresh data
+      // Or we can pass current headers if needed, but worker has DB access
     };
 
-    let roadmapData;
-    const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:5001';
-
-    try {
-      console.log(`[RoadmapController] Requesting roadmap from AI: ${AI_SERVICE_URL}/ai/generate-roadmap`);
-      const aiResponse = await axios.post(`${AI_SERVICE_URL}/ai/generate-roadmap`, aiPayload, { timeout: 15000 });
-
-      if (aiResponse.data.status === 'success') {
-        roadmapData = aiResponse.data.data.roadmap;
-        console.log('[RoadmapController] AI Roadmap generated successfully');
-      } else {
-        throw new Error('AI Service returned fail status');
-      }
-    } catch (aiError) {
-      console.error('[RoadmapController] AI Service failed, falling back to basic template:', aiError.message);
-      // FALLBACK LOGIC
-      // Create a basic generic roadmap if AI fails
-      roadmapData = [
-        {
-          title: `Basics of ${dreamCareer}`,
-          milestones: ['Research core concepts', 'Read introductory articles'],
-          duration: '1 week'
-        }
-      ];
-    }
-
-    // Normalize milestones before saving
-    const milestones = normalizeMilestones(roadmapData);
-
-    const roadmap = await Roadmap.create({
-      userId: user._id,
-      assessmentId: assessment?._id,
-      dreamCareer,
-      title: `Roadmap for ${dreamCareer}`,
-      description: 'Personalized learning plan',
-      milestones: milestones,
-      progressPercent: 0,
-      totalPointsAwarded: 0
+    const job = await Job.create({
+      type: 'GENERATE_ROADMAP',
+      userId,
+      payload
     });
 
-    // Link roadmap to user
-    user.personalizedRoadmap = roadmap._id;
-    await user.save();
+    res.status(202).json({
+      status: 'accepted',
+      data: {
+        jobId: job._id,
+        message: 'Roadmap generation started. Please poll /api/roadmaps/jobs/' + job._id
+      }
+    });
 
-    res.status(201).json({ status: 'success', data: { roadmapId: roadmap._id, roadmap } });
   } catch (err) { next(err); }
 };
+
+exports.getJobStatus = async (req, res, next) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ status: 'fail', message: 'Job not found' });
+
+    // Security: Only owner can view job
+    if (job.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ status: 'fail', message: 'Unauthorized' });
+    }
+
+    if (job.status === 'completed') {
+      // Lazy Finalization: If job is done but we haven't created the Roadmap doc yet
+      // Logic: Check if we already created a roadmap for this job? 
+      // Or easier: Just return the raw data and let the frontend use it?
+      // user.personalizedRoadmap needs to be updated.
+
+      // Let's do it here to keep the frontend simple
+      if (!job.processedAt) {
+        const roadmapData = job.result;
+        const milestones = normalizeMilestones(roadmapData);
+
+        const roadmap = await Roadmap.create({
+          userId: req.user._id,
+          dreamCareer: job.payload.dreamCareer,
+          title: `Roadmap for ${job.payload.dreamCareer}`,
+          description: 'Personalized learning plan',
+          milestones: milestones,
+          progressPercent: 0,
+          totalPointsAwarded: 0
+        });
+
+        const user = await User.findById(req.user._id);
+        user.personalizedRoadmap = roadmap._id;
+        await user.save();
+
+        // Mark job as processed so we don't create duplicates if polled again
+        job.processedAt = new Date();
+        await job.save();
+
+        return res.json({ status: 'success', jobStatus: 'completed', data: { roadmapId: roadmap._id } });
+      } else {
+        // Already processed, find the roadmap?
+        // Just return success, frontend will reload user profile
+        return res.json({ status: 'success', jobStatus: 'completed', data: { message: 'Roadmap created' } });
+      }
+    } else if (job.status === 'failed') {
+      return res.status(400).json({ status: 'fail', message: job.error, jobStatus: 'failed' });
+    } else {
+      return res.json({ status: 'success', jobStatus: job.status });
+    }
+  } catch (err) { next(err); }
+};
+
 
 exports.getById = async (req, res, next) => {
   try {
@@ -129,6 +128,10 @@ exports.getById = async (req, res, next) => {
 
 exports.listByUser = async (req, res, next) => {
   try {
+    // SECURITY FIX: IDOR Prevention - Authenticated user can only view their own roadmaps
+    if (req.params.userId !== req.user._id.toString()) {
+      return res.status(403).json({ status: 'fail', message: 'Unauthorized to view these roadmaps' });
+    }
     const roadmaps = await Roadmap.find({ userId: req.params.userId }).sort({ createdAt: -1 });
     res.json({ status: 'success', data: roadmaps });
   } catch (err) { next(err); }

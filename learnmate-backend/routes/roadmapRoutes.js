@@ -21,6 +21,7 @@ router.get('/my', auth, controller.getMyRoadmap);
 router.get('/my-roadmap', auth, controller.getMyRoadmap);
 router.get('/user/:userId', auth, [param('userId').isString()], validate, controller.listByUser);
 router.get('/:id', auth, [param('id').isString()], validate, controller.getById);
+router.get('/jobs/:id', auth, [param('id').isString()], validate, controller.getJobStatus);
 router.put('/:id/goals/:goalId/complete', auth, [param('id').isString(), param('goalId').isString()], validate, controller.completeGoal);
 
 module.exports = router;

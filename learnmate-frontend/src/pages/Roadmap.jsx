@@ -218,26 +218,70 @@ const Roadmap = () => {
     }
 
     setLoading(true);
+    let pollInterval;
+
     try {
       const assessmentResults = JSON.parse(localStorage.getItem('assessmentResults'));
       const assessmentId = assessmentResults?.assessmentId || null;
 
+      // 1. Submit Async Job
       const response = await roadmapService.generateRoadmap(
         selectedCareerForRoadmap,
         assessmentId
       );
 
-      if (response.status === 'success') {
-        setShowConfetti(true);
-        toast.success('Roadmap generated successfully! 🚀');
-        setShowCreateModal(false);
-        await loadUserRoadmap();
+      if (response.status === 'accepted' && response.data.jobId) {
+        toast.info('AI is generating your roadmap... (~10s)');
+
+        // 2. Poll for Status
+        pollInterval = setInterval(async () => {
+          try {
+            const jobRes = await roadmapService.getJobStatus(response.data.jobId);
+            const { jobStatus, data } = jobRes;
+
+            if (jobStatus === 'completed') {
+              clearInterval(pollInterval);
+              // Job is done, we need to refresh to fetch the NEW roadmap
+              // NOTE: Creating the roadmap document is handled by the backend's getJobStatus (lazy finalization)
+              // OR we need to trust that the job execution created it? 
+              // Wait, our worker returned data but didn't save Roadmap.
+              // The Frontend receiving 'data' is great, but we need to persist it.
+
+              // Strategy Change: 
+              // We will call a new endpoint: POST /roadmaps/finalize { jobId }
+              // OR update `getJobStatus` to create the roadmap if missing.
+              // Let's assume `getJobStatus` does the magic.
+
+              setShowConfetti(true);
+              toast.success('Roadmap generated successfully! 🚀');
+              setShowCreateModal(false);
+              await loadUserRoadmap(); // Reload to get the new roadmap
+              setLoading(false);
+            } else if (jobStatus === 'failed') {
+              clearInterval(pollInterval);
+              toast.error('AI Generation Failed. Please try again.');
+              setLoading(false);
+            }
+            // If 'pending' or 'processing', do nothing, keep polling
+          } catch (pollErr) {
+            console.warn("Polling...", pollErr);
+          }
+        }, 2000);
+      } else {
+        // Fallback for synchronous (if we revert)
+        if (response.status === 'success') {
+          setShowConfetti(true);
+          toast.success('Roadmap generated successfully! 🚀');
+          setShowCreateModal(false);
+          await loadUserRoadmap();
+          setLoading(false);
+        }
       }
     } catch (error) {
       console.error('Roadmap Generation Error:', error);
       toast.error('Failed to generate roadmap. Please try again.');
-    } finally {
       setLoading(false);
+      if (pollInterval) clearInterval(pollInterval);
     }
   };
 

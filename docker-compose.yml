@@ -15,10 +15,20 @@ services:
       - SMTP_PASS=${SMTP_PASS}
     restart: always
 
+  ai-service:
+    build: ./AI-Model
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - MONGO_URI=${MONGO_URI}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    restart: always
+
   # Optional: Simple frontend serve (assuming static build)
   # frontend:
   #   image: nginx:alpine
   #   volumes:
-  #     - ./learnmate-frontend/dist:/usr/share/nginx/html
+  #     - ./learnmate-frontend/build:/usr/share/nginx/html
   #   ports:
   #     - "80:80"

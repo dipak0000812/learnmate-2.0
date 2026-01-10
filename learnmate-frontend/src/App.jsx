@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { Toaster } from 'sonner';
+
 import useAuthStore from './store/authStore';
 import { SocketProvider } from './context/SocketContext';
 import tokenService from './services/tokenService';

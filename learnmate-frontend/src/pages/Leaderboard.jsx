@@ -272,7 +272,15 @@ const Leaderboard = () => {
                 Keep Climbing! 🚀
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                You're {leaderboardData[6].rank - 7} places away from top 10. Complete more quizzes to climb!
+                {userRank ? (
+                  userRank.rank > 10 ? (
+                    <>You're {userRank.rank - 10} places away from the top 10. Complete more quizzes to climb!</>
+                  ) : (
+                    <>You're doing great! Keep maintaining your top 10 position!</>
+                  )
+                ) : (
+                  <>Start completing quizzes to join the leaderboard!</>
+                )}
               </p>
             </div>
             <div className="flex items-center gap-2">

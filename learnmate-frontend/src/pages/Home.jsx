@@ -13,13 +13,13 @@ const Home = () => {
             <div className="relative bg-[#0a2540] text-white">
                 {/* CSS Gradient Mesh - Simplified for React/Tailwind without external assets */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-[-50%] left-[-10%] w-[80%] h-[150%] bg-gradient-to-br from-[#ec4899] via-[#8b5cf6] to-[#06b6d4] opacity-30 blur-[120px] rotate-12 transform-gpu"></div>
-                    <div className="absolute top-[20%] right-[-10%] w-[60%] h-[120%] bg-gradient-to-bl from-[#f43f5e] via-[#7c3aed] to-[#3b82f6] opacity-30 blur-[100px] -rotate-12 transform-gpu"></div>
+                    <div className="absolute top-[-50%] left-[-10%] w-[80%] h-[150%] bg-gradient-to-br from-[#ec4899] via-[#8b5cf6] to-[#06b6d4] opacity-50 blur-[100px] rotate-12 transform-gpu"></div>
+                    <div className="absolute top-[20%] right-[-10%] w-[60%] h-[120%] bg-gradient-to-bl from-[#f43f5e] via-[#7c3aed] to-[#3b82f6] opacity-40 blur-[80px] -rotate-12 transform-gpu"></div>
                 </div>
 
                 {/* NAVBAR: Transparent & White Text */}
                 <nav className="relative z-50 pt-6 pb-6">
-                    <div className="max-w-[1080px] mx-auto px-6 flex items-center justify-between">
+                    <div className="max-w-[1280px] mx-auto px-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/20 hover:bg-white/20 transition-colors">
                                 <span className="text-white text-base font-bold font-heading">L</span>
@@ -41,13 +41,13 @@ const Home = () => {
                 </nav>
 
                 {/* HERO CONTENT */}
-                <section className="relative pt-20 pb-32 sm:pt-32 sm:pb-48 overflow-hidden">
-                    <div className="max-w-[1080px] mx-auto px-6">
-                        <div className="grid lg:grid-cols-2 gap-20 items-center">
+                <section className="relative pt-24 pb-32 sm:pt-32 sm:pb-40 overflow-hidden">
+                    <div className="max-w-[1280px] mx-auto px-6">
+                        <div className="grid lg:grid-cols-2 gap-12 items-center">
 
                             {/* Left: Typography (MASSIVE SCALE) */}
-                            <div className="max-w-2xl relative z-10">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-sm font-medium text-pink-200 mb-10 backdrop-blur-md">
+                            <div className="max-w-3xl relative z-10">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-sm font-medium text-pink-200 mb-8 backdrop-blur-md">
                                     <span className="flex h-2 w-2 relative">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
@@ -55,26 +55,27 @@ const Home = () => {
                                     New: Interactive Python Environments
                                 </div>
 
-                                <h1 className="font-heading text-7xl sm:text-8xl md:text-9xl font-bold tracking-tighter text-white mb-10 leading-[0.95]">
+                                {/* Stripe H1: Heavy, Tight, Massive */}
+                                <h1 className="font-heading text-6xl sm:text-8xl md:text-[7rem] font-extrabold tracking-[-0.04em] text-white mb-8 leading-[0.9]">
                                     Financial <br />
                                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300">velocity</span> <br />
                                     for skills.
                                 </h1>
 
-                                <p className="text-xl sm:text-2xl text-slate-300 mb-12 leading-relaxed max-w-lg font-medium">
+                                <p className="text-lg sm:text-xl text-slate-200 mb-10 leading-normal max-w-lg font-medium opacity-90">
                                     The infrastructure to grow your engineering capability. Replace passive tutorials with deliberate, measurable practice.
                                 </p>
 
-                                <div className="flex flex-col sm:flex-row items-center gap-6">
+                                <div className="flex flex-col sm:flex-row items-center gap-4">
                                     <Link
                                         to="/register"
-                                        className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-[#635bff] text-white rounded-full font-bold text-lg hover:bg-[#5851df] transition-all transform hover:-translate-y-1 shadow-xl shadow-indigo-900/20"
+                                        className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 bg-[#635bff] text-white rounded-full font-bold text-base hover:bg-[#5851df] transition-all transform hover:-translate-y-0.5 shadow-xl shadow-indigo-900/20"
                                     >
                                         Start now <span className="ml-2">→</span>
                                     </Link>
                                     <Link
                                         to="/login"
-                                        className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-white font-bold text-lg hover:text-indigo-200 transition-colors"
+                                        className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-white font-bold text-base hover:text-indigo-200 transition-colors"
                                     >
                                         View existing demos
                                     </Link>

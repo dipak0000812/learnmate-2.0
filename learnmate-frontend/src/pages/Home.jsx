@@ -21,7 +21,7 @@ const Home = () => {
                 <nav className="relative z-50 pt-6 pb-6">
                     <div className="max-w-[1280px] mx-auto px-6 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/20 hover:bg-white/20 transition-colors">
+                            <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center border border-white/30 hover:bg-white/20 transition-colors shadow-sm">
                                 <span className="text-white text-base font-bold font-heading">L</span>
                             </div>
                             <span className="font-heading font-bold text-white text-2xl tracking-tight hover:opacity-90 transition-opacity cursor-default">LearnMate</span>
@@ -47,12 +47,9 @@ const Home = () => {
 
                             {/* Left: Typography (MASSIVE SCALE) */}
                             <div className="max-w-3xl relative z-10">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 text-sm font-medium text-pink-200 mb-8 backdrop-blur-md">
-                                    <span className="flex h-2 w-2 relative">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
-                                    </span>
-                                    New: Interactive Python Environments
+                                {/* Stripe "Preview" Badge Style: Orange Pill */}
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f6a546] text-xs font-bold text-[#3c1d00] mb-8 uppercase tracking-wider shadow-sm hover:bg-[#ffb050] transition-colors cursor-default">
+                                    Preview
                                 </div>
 
                                 {/* Stripe H1: Heavy, Tight, Massive */}

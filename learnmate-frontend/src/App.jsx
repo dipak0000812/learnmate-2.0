@@ -16,6 +16,7 @@ import VerifyEmail from './pages/auth/VerifyEmail';
 import VerifyEmailPending from './pages/auth/VerifyEmailPending';
 
 // Main Pages
+import Home from './pages/Home'; // NEW
 import Dashboard from './pages/Dashboard';
 import Quizzes from './pages/Quizzes';
 import QuizTake from './pages/QuizTake';
@@ -85,7 +86,12 @@ function App() {
         <Routes>
 
           {/* Public Routes */}
-          <Route path="/" element={<Navigate to="/login" />} />
+          <Route
+            path="/"
+            element={
+              <PublicRoute><Home /></PublicRoute>
+            }
+          />
 
           <Route
             path="/login"

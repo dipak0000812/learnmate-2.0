@@ -1,0 +1,38 @@
+# ============================
+# LearnMate 2.0 Root .gitignore
+# ============================
+
+# Environment Variables (CRITICAL - Contains Secrets)
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.pnp/
+.pnp.js
+
+# Build Outputs
+/build
+/dist
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Test Coverage
+/coverage
+
+# Debug Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

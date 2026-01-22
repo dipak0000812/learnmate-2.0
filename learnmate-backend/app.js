@@ -74,7 +74,8 @@ if (process.env.AI_SERVICE_URL) {
 }
 
 // 4. Body parsers (JSON/Cookie) - Executed after Proxy
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
@@ -124,7 +125,13 @@ app.use(errorMiddleware);
 // Start server ONLY if run directly (not if imported by cluster.js)
 const PORT = process.env.PORT || 5000;
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+  // Initialize Socket.io for Dev Mode (Single Process)
+  const socketService = require('./services/socketService');
+  const io = socketService.init(server);
+  io.use(require('./middleware/socketAuth'));
+  console.log('🔌 Socket.io initialized in Dev Mode');
 }
 
 module.exports = app;

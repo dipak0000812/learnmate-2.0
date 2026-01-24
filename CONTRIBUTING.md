@@ -59,6 +59,12 @@ git checkout -b fix/issue-number-short-description
 - Address feedback promptly
 - Be patient — this is a volunteer project
 
+### 6. CI Expectations
+
+Pull requests must pass all required GitHub Actions checks (backend tests and frontend build).
+
+Preview deployments (e.g. Vercel) are non-blocking and may fail due to missing authorization. These failures do not prevent merges.
+
 ## Code Standards
 
 - **Backend**: Express.js conventions, async/await

@@ -22,9 +22,20 @@ class TokenService {
   }
 
   // Check if token is expired (DEMO MODE: ALWAYS FALSE)
-  isTokenExpired(token) {
-    return false;
+  import jwtDecode from "jwt-decode";
+
+isTokenExpired(token) {
+  if (!token) return true;
+
+  try {
+    const decoded = jwtDecode(token);
+    const currentTime = Date.now() / 1000; // seconds
+    return decoded.exp < currentTime;
+  } catch {
+    // Invalid or malformed token → treat as expired
+    return true;
   }
+}
 
   // Get token expiry time
   getTokenExpiryTime(token) {

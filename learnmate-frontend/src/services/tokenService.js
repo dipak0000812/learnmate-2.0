@@ -23,7 +23,17 @@ class TokenService {
 
   // Check if token is expired (DEMO MODE: ALWAYS FALSE)
   isTokenExpired(token) {
-    return false;
+      try {
+    if (!token) return true;
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expiry = payload.exp * 1000; // convert seconds to milliseconds
+
+    return Date.now() > expiry;
+  } catch (error) {
+    // if token is invalid or corrupted, treat it as expired
+    return true;
+  }
   }
 
   // Get token expiry time

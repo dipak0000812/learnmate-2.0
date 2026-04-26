@@ -1,10 +1,15 @@
 const rateLimit = require('express-rate-limit');
+const RedisStore = require('rate-limit-redis').default;
+const redis = require('../config/redis');
 
 const isProd = process.env.NODE_ENV === 'production';
 
 // Strict limiter for Auth routes (Login/Register/Password Reset)
 // 5 attempts per 15 minutes to block brute-force
 exports.authLimiter = rateLimit({
+    store: process.env.NODE_ENV === 'test' ? undefined : new RedisStore({
+        sendCommand: (...args) => redis.call(...args),
+    }),
     windowMs: 15 * 60 * 1000,
     max: isProd ? 5 : 100, // Higher for dev convenience
     standardHeaders: true,
@@ -15,6 +20,9 @@ exports.authLimiter = rateLimit({
 // Standard limiter for general API routes
 // 300 requests per 15 minutes (~20 req/min)
 exports.apiLimiter = rateLimit({
+    store: process.env.NODE_ENV === 'test' ? undefined : new RedisStore({
+        sendCommand: (...args) => redis.call(...args),
+    }),
     windowMs: 15 * 60 * 1000,
     max: 300,
     standardHeaders: true,
@@ -25,6 +33,9 @@ exports.apiLimiter = rateLimit({
 // Stricter limiter for AI Generation routes (Expensive operations)
 // 10 requests per minute
 exports.aiProxyLimiter = rateLimit({
+    store: process.env.NODE_ENV === 'test' ? undefined : new RedisStore({
+        sendCommand: (...args) => redis.call(...args),
+    }),
     windowMs: 60 * 1000,
     max: 10,
     standardHeaders: true,

@@ -6,22 +6,11 @@ import { toast } from 'sonner';
 const OAuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { loginWithToken } = useAuthStore();
+  const { loginWithOAuthCode } = useAuthStore();
 
   useEffect(() => {
     const processCallback = async () => {
-      // SECURITY FIX: Read token from cookie, not URL
-      const getCookie = (name) => {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-      };
-
-      const deleteCookie = (name) => {
-        document.cookie = name + '=; Max-Age=-99999999; path=/';
-      };
-
-      const token = getCookie('oauth_otp');
+      const code = searchParams.get('code');
       const error = searchParams.get('error');
 
       if (error) {
@@ -30,21 +19,15 @@ const OAuthCallback = () => {
         return;
       }
 
-      if (!token) {
-        // Fallback: Check if token is still in URL (transition period or error modes)
-        // But for strict security we prefer cookie.
-        // Showing specific error helps debugging.
-        toast.error('Secure login failed (Token Missing)');
+      if (!code) {
+        toast.error('Secure login failed (Authorization Code Missing)');
         navigate('/login');
         return;
       }
 
-      // Cleanup cookie immediately
-      deleteCookie('oauth_otp');
-
-      const result = await loginWithToken(token);
+      const result = await loginWithOAuthCode(code);
       if (result.success) {
-        toast.success('Successfully logged in w/ Google! 🚀');
+        toast.success('Successfully logged in! 🚀');
         navigate('/dashboard');
       } else {
         toast.error('Session creation failed');
@@ -53,7 +36,7 @@ const OAuthCallback = () => {
     };
 
     processCallback();
-  }, [searchParams, navigate, loginWithToken]);
+  }, [searchParams, navigate, loginWithOAuthCode]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">

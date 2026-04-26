@@ -41,24 +41,21 @@ const useAuthStore = create((set, get) => ({
   },
 
   // Login with existing token (OAuth)
-  loginWithToken: async (token) => {
+  loginWithOAuthCode: async (code) => {
     set({ loading: true, error: null });
     try {
-      localStorage.setItem('token', token);
-      // Fetch user data with this token
-      const user = await get().fetchUser();
+      const response = await api.post('/auth/exchange-code', { code });
+      const { token, user } = response.data.data;
 
-      if (user) {
-        tokenService.scheduleTokenRefresh(token);
-        set({ token, isAuthenticated: true, loading: false });
-        return { success: true };
-      } else {
-        throw new Error('Failed to fetch user profile');
-      }
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      tokenService.scheduleTokenRefresh(token);
+
+      set({ user, token, isAuthenticated: true, loading: false });
+      return { success: true };
     } catch (error) {
-      console.error('OAuth Hydration error:', error);
+      console.error('OAuth Code Exchange error:', error);
       set({ error: 'OAuth failed', loading: false, token: null, isAuthenticated: false });
-      localStorage.removeItem('token');
       return { success: false, error: 'Authentication failed' };
     }
   },

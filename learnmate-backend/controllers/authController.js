@@ -17,6 +17,8 @@ const refreshCookieMaxAge = (() => {
     return seconds * 1000;
 })();
 
+const { storeOAuthCode, getOAuthCode } = require('../utils/oauthStore');
+
 const buildUserResponse = (user) => ({
     _id: user._id,
     name: user.name,
@@ -145,12 +147,12 @@ exports.login = async (req, res, next) => {
     try {
         const user = await User.findOne({ email }).select('+password');
         if (!user) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json({ status: 'fail', message: 'Invalid credentials' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json({ status: 'fail', message: 'Invalid credentials' });
         }
 
         sendAuthResponse(res, user);
@@ -162,8 +164,17 @@ exports.login = async (req, res, next) => {
 // Get current user profile from token
 exports.me = async (req, res, next) => {
     try {
-        const user = await User.findById(req.user._id).select('-password');
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        const { cacheGet, cacheSet } = require('../utils/cache');
+        const cacheKey = `user:${req.user._id}`;
+        
+        let user = await cacheGet(cacheKey);
+
+        if (!user) {
+            user = await User.findById(req.user._id).select('-password').lean();
+            if (!user) return res.status(404).json({ message: 'User not found' });
+            await cacheSet(cacheKey, user, 300); // 5 minutes cache
+        }
+        
         res.json({ status: 'success', data: user });
     } catch (err) {
         next(err);
@@ -287,25 +298,19 @@ exports.verifyEmail = async (req, res, next) => {
 exports.googleAuth = require('passport').authenticate('google', { session: false, scope: ['profile', 'email'] });
 
 exports.googleCallback = (req, res, next) => {
-    require('passport').authenticate('google', { session: false }, (err, user, info) => {
+    require('passport').authenticate('google', { session: false }, async (err, user, info) => {
         if (err || !user) {
             return res.redirect('http://localhost:3000/login?error=oauth_failed');
         }
         try {
-            const token = createAccessToken(user._id);
-            const refreshToken = createRefreshToken(user._id);
-            setRefreshCookie(res, refreshToken);
-
-            // SECURITY FIX: Send access token via short-lived cookie instead of URL
-            res.cookie('oauth_otp', token, {
-                httpOnly: false, // Client needs to read this once
-                secure: isProd,
-                sameSite: 'lax',
-                maxAge: 15000 // 15 seconds
-            });
+            // SECURITY FIX: Generate short-lived code instead of passing token via cookie
+            const code = crypto.randomBytes(32).toString('hex');
+            
+            // Store code with 60-second expiry in Redis
+            await storeOAuthCode(code, user._id);
 
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-            res.redirect(`${frontendUrl}/oauth/callback`); // No token in URL
+            res.redirect(`${frontendUrl}/oauth/callback?code=${code}`);
         } catch (error) {
             next(error);
         }
@@ -315,27 +320,46 @@ exports.googleCallback = (req, res, next) => {
 exports.githubAuth = require('passport').authenticate('github', { session: false, scope: ['user:email'] });
 
 exports.githubCallback = (req, res, next) => {
-    require('passport').authenticate('github', { session: false }, (err, user, info) => {
+    require('passport').authenticate('github', { session: false }, async (err, user, info) => {
         if (err || !user) {
             return res.redirect('http://localhost:3000/login?error=oauth_failed');
         }
         try {
-            const token = createAccessToken(user._id);
-            const refreshToken = createRefreshToken(user._id);
-            setRefreshCookie(res, refreshToken);
-
-            // SECURITY FIX: Send access token via short-lived cookie instead of URL
-            res.cookie('oauth_otp', token, {
-                httpOnly: false, // Client needs to read this once
-                secure: isProd,
-                sameSite: 'lax',
-                maxAge: 15000 // 15 seconds
-            });
+            // SECURITY FIX: Generate short-lived code instead of passing token via cookie
+            const code = crypto.randomBytes(32).toString('hex');
+            
+            // Store code with 60-second expiry in Redis
+            await storeOAuthCode(code, user._id);
 
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-            res.redirect(`${frontendUrl}/oauth/callback`); // No token in URL
+            res.redirect(`${frontendUrl}/oauth/callback?code=${code}`);
         } catch (error) {
             next(error);
         }
     })(req, res, next);
+};
+
+exports.exchangeCode = async (req, res, next) => {
+    try {
+        const { code } = req.body;
+        
+        if (!code) {
+            return res.status(400).json({ status: 'fail', message: 'Missing authorization code' });
+        }
+
+        const userId = await getOAuthCode(code);
+        
+        if (!userId) {
+            return res.status(400).json({ status: 'fail', message: 'Invalid or expired authorization code' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ status: 'fail', message: 'User not found' });
+        }
+
+        sendAuthResponse(res, user);
+    } catch (err) {
+        next(err);
+    }
 };

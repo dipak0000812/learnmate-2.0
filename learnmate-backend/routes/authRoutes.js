@@ -6,6 +6,36 @@ const validate = require('../middleware/validate');
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, email, password]
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *               semester:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: User created
+ *       400:
+ *         description: Validation error
+ */
 // Registration route
 router.post(
   '/register',
@@ -19,6 +49,30 @@ router.post(
   authController.register
 );
 
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Invalid credentials
+ */
 // Login route
 router.post(
   '/login',
@@ -32,6 +86,20 @@ router.post(
 
 router.post('/refresh', authController.refreshToken);
 
+/**
+ * @swagger
+ * /auth/me:
+ *   get:
+ *     summary: Get current user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user profile
+ *       401:
+ *         description: Unauthorized
+ */
 // Current user route
 router.get('/me', auth, authController.me);
 
@@ -85,7 +153,7 @@ router.post('/resend-verification', auth, async (req, res) => {
     await emailService.sendVerificationEmail(user.email, verificationToken, user.name);
     res.json({ status: 'success', message: 'Verification email sent! Check your inbox.' });
   } catch (error) {
-    console.error('Resend verification error:', error);
+    req.log.error({ err: error }, 'Resend verification error');
     res.status(500).json({
       status: 'fail',
       message: 'Failed to send verification email. Please try again.'
@@ -97,5 +165,7 @@ router.get('/google', authController.googleAuth);
 router.get('/google/callback', authController.googleCallback);
 router.get('/github', authController.githubAuth);
 router.get('/github/callback', authController.githubCallback);
+
+router.post('/exchange-code', authController.exchangeCode);
 
 module.exports = router;

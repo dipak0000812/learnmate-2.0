@@ -80,7 +80,7 @@ router.post(
         data: { onboardingData: user.onboardingData }
       });
     } catch (error) {
-      console.error('Save onboarding step error:', error);
+      req.log.error({ err: error }, 'Save onboarding step error');
       res.status(500).json({
         status: 'fail',
         message: 'Failed to save onboarding data'
@@ -151,7 +151,7 @@ router.post('/complete', auth, async (req, res) => {
       );
       aiRoadmap = aiResponse.data;
     } catch (aiError) {
-      console.error('AI service error:', aiError.message);
+      req.log.error({ err: aiError }, 'AI service error');
       aiRoadmap = {
         title: `Learning Path for ${roadmapRequest.targetRole}`,
         description: `Personalized roadmap based on your ${roadmapRequest.skillLevel} level in ${roadmapRequest.interests.join(', ')}`,
@@ -191,7 +191,7 @@ router.post('/complete', auth, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Onboarding completion error:', error);
+    req.log.error({ err: error }, 'Onboarding completion error');
     res.status(500).json({
       status: 'fail',
       message: 'Failed to complete onboarding. Please try again.'

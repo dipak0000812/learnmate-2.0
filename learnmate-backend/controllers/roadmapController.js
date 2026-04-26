@@ -155,7 +155,7 @@ exports.completeGoal = async (req, res, next) => {
 
     // SECURITY FIX: IDOR Prevention - Check Ownership
     if (roadmap.userId.toString() !== req.user._id.toString()) {
-      console.warn(`[Security] IDOR attempt by user ${req.user._id} on roadmap ${id}`);
+      req.log.warn({ userId: req.user._id, roadmapId: id }, '[Security] IDOR attempt');
       return res.status(403).json({ status: 'fail', message: 'Unauthorized access to this roadmap' });
     }
 

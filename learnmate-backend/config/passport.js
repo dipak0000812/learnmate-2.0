@@ -1,4 +1,5 @@
 const passport = require('passport');
+const logger = require('../utils/logger');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/User');
 
@@ -52,7 +53,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         )
     );
 } else {
-    console.warn('⚠️ Google OAuth credentials missing. Google Login disabled.');
+    logger.warn('⚠️ Google OAuth credentials missing. Google Login disabled.');
 }
 
 passport.serializeUser((user, done) => done(null, user.id));
@@ -123,7 +124,7 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
         )
     );
 } else {
-    console.warn('⚠️ GitHub OAuth credentials missing. GitHub Login disabled.');
+    logger.warn('⚠️ GitHub OAuth credentials missing. GitHub Login disabled.');
 }
 
 module.exports = passport;

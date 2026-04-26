@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
+const logger = require('../utils/logger');
 
 const connectDB = async () => {
   try {
     const uri = process.env.MONGO_URI;
     if (!uri) {
-      console.error('MONGO_URI is not set');
+      logger.error('MONGO_URI is not set');
       process.exit(1);
     }
     await mongoose.connect(uri, {
@@ -13,23 +14,23 @@ const connectDB = async () => {
       maxPoolSize: Number(process.env.MONGO_MAX_POOL || 50),
       minPoolSize: Number(process.env.MONGO_MIN_POOL || 5) // Maintain some connections
     });
-    console.log('MongoDB connected ✅');
+    logger.info('MongoDB connected ✅');
 
     // Graceful shutdown
     const close = async () => {
       try {
         await mongoose.connection.close();
-        console.log('MongoDB connection closed');
+        logger.info('MongoDB connection closed');
         process.exit(0);
       } catch (e) {
-        console.error('Error during MongoDB disconnect:', e.message);
+        logger.error({ err: e }, 'Error during MongoDB disconnect');
         process.exit(1);
       }
     };
     process.on('SIGINT', close);
     process.on('SIGTERM', close);
   } catch (err) {
-    console.error('MongoDB connection error:', err.message);
+    logger.error({ err }, 'MongoDB connection error');
     process.exit(1);
   }
 };

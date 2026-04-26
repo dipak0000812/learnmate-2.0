@@ -5,8 +5,22 @@ const careerService = {
   getRecommendations: async (userData) => {
     try {
 
-      // Try the AI endpoint
       const response = await api.post('/ai/recommend-career', userData);
+      if (response.data.status === 'accepted' && response.data.jobId) {
+        // Poll for result
+        let attempts = 0;
+        while (attempts < 15) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          const jobRes = await api.get(`/ai/jobs/${response.data.jobId}`);
+          if (jobRes.data.jobStatus === 'completed') {
+            return jobRes.data.data;
+          } else if (jobRes.data.jobStatus === 'failed') {
+            throw new Error('AI Job Failed');
+          }
+          attempts++;
+        }
+        throw new Error('AI Job Timeout');
+      }
       return response.data;
     } catch (error) {
       // If 404, the AI endpoint doesn't exist yet

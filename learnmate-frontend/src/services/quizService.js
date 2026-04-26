@@ -29,6 +29,9 @@ const quizService = {
         answers,
         timeTaken
       });
+      // The old proxy endpoint `/api/ai/evaluate-quiz` might have been called here if frontend was decoupled
+      // But submitQuiz hits `/assessments/submit`, which is an Express controller.
+      // Wait, `/assessments/submit` likely does the AI proxy call internally!
       return response.data;
     } catch (error) {
       throw error;

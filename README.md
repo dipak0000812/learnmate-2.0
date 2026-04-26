@@ -129,9 +129,9 @@ MIT License — see [LICENSE](LICENSE)
 
 ---
 
-## Maintainer
+## Project Lead
 
-**Dipak Dhangar** — Final decision authority
+**Dipak Dhangar**
 
 ---
 

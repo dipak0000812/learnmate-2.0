@@ -1,6 +1,12 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: always
+
   backend:
     build: ./learnmate-backend
     ports:
@@ -13,6 +19,9 @@ services:
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
     restart: always
 
   ai-service:
@@ -23,12 +32,18 @@ services:
       - PORT=5001
       - MONGO_URI=${MONGO_URI}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
     restart: always
 
-  # Optional: Simple frontend serve (assuming static build)
-  # frontend:
-  #   image: nginx:alpine
-  #   volumes:
-  #     - ./learnmate-frontend/build:/usr/share/nginx/html
-  #   ports:
-  #     - "80:80"
+  ai-worker:
+    build: ./AI-Model
+    command: celery -A celery_app worker --loglevel=info
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: always

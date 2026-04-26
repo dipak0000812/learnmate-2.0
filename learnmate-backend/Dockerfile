@@ -1,17 +1,17 @@
 FROM node:18-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 COPY package*.json ./
-
 RUN npm ci --only=production
 
 COPY . .
 
-# Expose API Port
-EXPOSE 5000
-
-# production environment
 ENV NODE_ENV=production
 
-CMD ["node", "cluster.js"]
+EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:5000/health || exit 1
+
+CMD ["node", "app.js"]

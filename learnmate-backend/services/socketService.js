@@ -1,4 +1,5 @@
 const socketIO = require('socket.io');
+const logger = require('../utils/logger');
 
 let io;
 
@@ -11,18 +12,18 @@ exports.init = (server) => {
         }
     });
 
-    console.log('🔌 Socket.io initialized');
+    logger.info('🔌 Socket.io initialized');
 
     io.on('connection', (socket) => {
-        console.log(`🔌 Client connected: ${socket.user ? socket.user.id : 'Anon'} (${socket.id})`);
+        logger.info(`🔌 Client connected: ${socket.user ? socket.user.id : 'Anon'} (${socket.id})`);
 
         socket.on('join_room', (room) => {
             socket.join(room);
-            console.log(`User ${socket.id} joined room ${room}`);
+            logger.info(`User ${socket.id} joined room ${room}`);
         });
 
         socket.on('disconnect', () => {
-            console.log('Stubborn Client disconnected');
+            logger.info('Stubborn Client disconnected');
         });
     });
 

@@ -32,14 +32,17 @@ module.exports = (err, req, res, next) => {
   };
   if (!isProd && err.stack) payload.stack = err.stack;
 
-  // Structured Logging
-  const logger = require('./logger');
-  logger.error(err.message, {
-    statusCode,
-    method: req.method,
-    path: req.path,
-    stack: isProd ? undefined : err.stack // Log stack internally but don't send to client if prod
-  });
+  // Structured Request-level Logging
+  if (req.log) {
+    req.log.error({
+      err,
+      stack: err.stack,
+    }, 'Unhandled error');
+  } else {
+    // Fallback if logger middleware wasn't reached
+    const logger = require('../utils/logger');
+    logger.error({ err, stack: err.stack, path: req.path }, 'Unhandled error (no req.log)');
+  }
 
   res.status(statusCode).json(payload);
 };

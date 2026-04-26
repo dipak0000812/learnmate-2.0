@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const logger = require('../utils/logger');
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -14,10 +15,10 @@ const transporter = nodemailer.createTransport({
 // Test connection on startup
 transporter.verify((error) => {
   if (error) {
-    console.error('❌ Email service configuration error:', error.message);
-    console.log('📧 Email features will not work. Please configure SMTP settings in .env');
+    logger.error({ err: error }, '❌ Email service configuration error');
+    logger.info('📧 Email features will not work. Please configure SMTP settings in .env');
   } else {
-    console.log('✅ Email service is ready');
+    logger.info('✅ Email service is ready');
   }
 });
 
@@ -75,10 +76,10 @@ exports.sendVerificationEmail = async (email, verificationToken, userName) => {
         </html>
       `
     });
-    console.log(`✅ Verification email sent to ${email}`);
+    logger.info(`✅ Verification email sent to ${email}`);
     return true;
   } catch (error) {
-    console.error('❌ Failed to send verification email:', error.message);
+    logger.error({ err: error }, '❌ Failed to send verification email');
     throw error;
   }
 };
@@ -108,10 +109,10 @@ exports.sendPasswordResetEmail = async (email, resetToken, userName) => {
         </html>
       `
     });
-    console.log(`✅ Password reset email sent to ${email}`);
+    logger.info(`✅ Password reset email sent to ${email}`);
     return true;
   } catch (error) {
-    console.error('❌ Failed to send password reset email:', error.message);
+    logger.error({ err: error }, '❌ Failed to send password reset email');
     throw error;
   }
 };

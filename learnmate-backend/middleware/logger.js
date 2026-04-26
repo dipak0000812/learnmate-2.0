@@ -1,24 +1,13 @@
-const winston = require('winston');
+const pinoHttp = require('pino-http');
+const logger = require('../utils/logger');
+const { randomUUID } = require('crypto');
 
-const logger = winston.createLogger({
-    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-    format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-    ),
-    defaultMeta: { service: 'learnmate-backend' },
-    transports: [
-        new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-        new winston.transports.File({ filename: 'logs/combined.log' })
-    ]
+module.exports = pinoHttp({
+  logger,
+  genReqId: (req) => req.headers['x-request-id'] || randomUUID(),
+  customLogLevel: (res, err) => {
+    if (res.statusCode >= 500 || err) return 'error';
+    if (res.statusCode >= 400) return 'warn';
+    return 'info';
+  },
 });
-
-// If we're not in production then log to the `console` with the format:
-// `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
-if (process.env.NODE_ENV !== 'production') {
-    logger.add(new winston.transports.Console({
-        format: winston.format.simple()
-    }));
-}
-
-module.exports = logger;
